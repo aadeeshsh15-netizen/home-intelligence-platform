@@ -1,0 +1,250 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum DeviceProtocol {
+  SIMULATED
+  MQTT
+  ZIGBEE
+  MATTER
+  HTTP
+}
+
+enum DeviceStatus {
+  ONLINE
+  DEGRADED
+  OFFLINE
+  ERROR
+}
+
+enum SensorType {
+  TEMPERATURE    // °C
+  HUMIDITY       // %
+  CO2            // ppm
+  PM2_5          // µg/m³
+  POWER          // W
+  OCCUPANCY      // 0 or 1
+  LIGHT          // lux
+  NOISE          // dB
+}
+
+enum SensorHealth {
+  HEALTHY
+  STALE
+  FAULTY
+  OFFLINE
+}
+
+enum SeverityLevel {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum EventStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum InsightType {
+  ANOMALY
+  EFFICIENCY
+  CORRELATION
+  EQUIPMENT_HEALTH
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(OWNER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  homes        Home[]
+}
+
+model Home {
+  id          String     @id @default(cuid())
+  name        String
+  timezone    String     @default("UTC")
+  address     String?
+  ownerId     String
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  floors      Floor[]
+  rules       Rule[]
+  events      Event[]
+  insights    Insight[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Floor {
+  id          String     @id @default(cuid())
+  homeId      String
+  home        Home       @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  level       Int        // 0: Ground, 1: First Floor, -1: Basement
+  name        String     // e.g. "Ground Floor", "Upper Level"
+  svgLayout   Json?      // Vector/grid bounding box definition for interactive floor plan
+  rooms       Room[]
+  createdAt   DateTime   @default(now())
+}
+
+model Room {
+  id          String     @id @default(cuid())
+  floorId     String
+  floor       Floor      @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  name        String     // e.g. "Master Bedroom", "Kitchen", "Living Room"
+  roomType    String     // "BEDROOM", "LIVING_ROOM", "KITCHEN", "OFFICE", "BATHROOM"
+  targetTemp  Float?     // Target comfort temperature (°C)
+  layoutX     Float      // Normalized 0-100 coordinates for floor plan
+  layoutY     Float
+  layoutW     Float
+  layoutH     Float
+  devices     Device[]
+  sensors     Sensor[]
+  events      Event[]
+  insights    Insight[]
+  createdAt   DateTime   @default(now())
+}
+
+model Device {
+  id              String         @id @default(cuid())
+  roomId          String
+  room            Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  name            String         // e.g. "Living Room AC", "Main Heat Pump"
+  deviceType      String         // "HVAC", "LIGHTING", "APPLIANCE", "VENTILATION"
+  protocol        DeviceProtocol @default(SIMULATED)
+  identifier      String         @unique // MAC, Serial, or MQTT Client ID
+  status          DeviceStatus   @default(ONLINE)
+  firmwareVersion String?
+  lastSeenAt      DateTime       @default(now())
+  configuration   Json?          // Dynamic device settings / thresholds
+  sensors         Sensor[]
+  events          Event[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Sensor {
+  id                  String               @id @default(cuid())
+  roomId              String
+  room                Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  deviceId            String?
+  device              Device?              @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  type                SensorType
+  unit                String               // "°C", "%", "ppm", "W", "lux", "dB"
+  samplingIntervalSec Int                  @default(30)
+  minExpectedValue    Float
+  maxExpectedValue    Float
+  lastReadingValue    Float?
+  lastReadingTime     DateTime?
+  health              SensorHealth         @default(HEALTHY)
+  readings            TelemetryReading[]
+  baselines           TelemetryBaseline[]
+  events              Event[]
+  insights            Insight[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([roomId, type])
+}
+
+model TelemetryReading {
+  id        BigInt   @id @default(autoincrement())
+  sensorId  String
+  sensor    Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  timestamp DateTime
+  value     Float
+  quality   String   @default("VALID") // "VALID", "DEGRADED", "INTERPOLATED"
+
+  @@unique([sensorId, timestamp])
+  @@index([sensorId, timestamp(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+}
+
+model TelemetryBaseline {
+  id          String   @id @default(cuid())
+  sensorId    String
+  sensor      Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int      // 0 (Sunday) to 6 (Saturday)
+  hourOfDay   Int      // 0 to 23
+  mean        Float
+  stdDev      Float
+  sampleCount Int
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sensorId, dayOfWeek, hourOfDay])
+}
+
+model Rule {
+  id                String        @id @default(cuid())
+  homeId            String
+  home              Home          @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  name              String
+  sensorType        SensorType
+  operator          String        // "GT", "LT", "RATE_OF_CHANGE", "STALE_TIMEOUT"
+  threshold         Float
+  durationSeconds   Int           @default(0)
+  severity          SeverityLevel @default(WARNING)
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+}
+
+model Event {
+  id          String        @id @default(cuid())
+  homeId      String
+  home        Home          @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  roomId      String?
+  room        Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  deviceId    String?
+  device      Device?       @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  sensorId    String?
+  sensor      Sensor?       @relation(fields: [sensorId], references: [id], onDelete: SetNull)
+  category    String        // "ENVIRONMENTAL", "ENERGY", "CONNECTIVITY", "ANOMALY"
+  severity    SeverityLevel
+  title       String
+  description String
+  contextData Json?         // { currentValue, threshold, baselineMean, zScore }
+  status      EventStatus   @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  resolvedAt  DateTime?
+
+  @@index([homeId, createdAt(sort: Desc)])
+  @@index([status, severity])
+}
+
+model Insight {
+  id                  String      @id @default(cuid())
+  homeId              String
+  home                Home        @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  roomId              String?
+  room                Room?       @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  sensorId            String?
+  sensor              Sensor?     @relation(fields: [sensorId], references: [id], onDelete: SetNull)
+  type                InsightType
+  title               String
+  summary             String
+  explanation         String      // Explicit mathematical/heuristic derivation
+  confidence          Float       // 0.00 to 1.00
+  isHeuristic         Boolean     @default(false)
+  evidenceData        Json        // Detailed mathematical breakdown: { baseline, current, zScore, trendSlope }
+  status              String      @default("ACTIVE") // "ACTIVE", "ACKNOWLEDGED", "DISMISSED"
+  createdAt           DateTime    @default(now())
+
+  @@index([homeId, createdAt(sort: Desc)])
+}
