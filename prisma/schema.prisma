@@ -38,6 +38,8 @@ enum SensorType {
   OCCUPANCY      // 0 or 1
   LIGHT          // lux
   NOISE          // dB
+  WATER_FLOW     // L/min
+  CONTACT        // binary (0 closed, 1 open)
 }
 
 enum SensorHealth {
@@ -67,6 +69,21 @@ enum InsightType {
   EQUIPMENT_HEALTH
 }
 
+enum IncidentStatus {
+  DETECTED
+  ACTIVE
+  RESOLVED
+  DISMISSED
+}
+
+enum IncidentType {
+  COOKING_EVENT
+  WATER_LEAK
+  AC_FAILURE
+  WINDOW_THERMAL_EVENT
+  MULTI_SENSOR_ANOMALY
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -89,6 +106,7 @@ model Home {
   rules       Rule[]
   events      Event[]
   insights    Insight[]
+  incidents   Incident[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -119,6 +137,7 @@ model Room {
   sensors     Sensor[]
   events      Event[]
   insights    Insight[]
+  incidents   Incident[]
   createdAt   DateTime   @default(now())
 }
 
@@ -248,3 +267,31 @@ model Insight {
 
   @@index([homeId, createdAt(sort: Desc)])
 }
+
+model Incident {
+  id                  String         @id @default(cuid())
+  homeId              String
+  home                Home           @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  roomId              String?
+  room                Room?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  incidentType        IncidentType
+  severity            SeverityLevel  @default(WARNING)
+  status              IncidentStatus @default(ACTIVE)
+  title               String
+  summary             String
+  explanation         String         // Detailed explainable derivation of contributing sensors
+  confidence          Float          // Mathematically derived from evidence weights (0.00 to 1.00)
+  correlationWindowMs Int            // Temporal sliding window used (e.g. 900,000 ms)
+  startedAt           DateTime       // Earliest contributing evidence timestamp
+  detectedAt          DateTime       @default(now())
+  resolvedAt          DateTime?
+  lastEvidenceAt      DateTime       @default(now())
+  evidence            Json           // ContributingSensorEvidence[]: values, baselines, deltas, weights
+  auditPayload        Json?          // Audit metrics: { ruleId, distinctSensorCount, rawConfidence, corroborationFactor }
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@index([homeId, status, createdAt(sort: Desc)])
+  @@index([homeId, incidentType, status])
+}
+

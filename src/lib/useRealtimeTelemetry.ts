@@ -73,6 +73,23 @@ export function useRealtimeTelemetry(onTick?: (tick: TelemetryTick) => void) {
       }
     });
 
+    es.addEventListener('incident_detected', (e: MessageEvent) => {
+      try {
+        const incident = JSON.parse(e.data);
+        const notif: LiveEventNotification = {
+          id: incident.id,
+          severity: incident.severity,
+          title: incident.title,
+          description: incident.summary,
+          category: 'INCIDENT',
+          createdAt: incident.createdAt,
+        };
+        setLiveNotifications((prev) => [notif, ...prev.slice(0, 4)]);
+      } catch (err) {
+        console.error('Error parsing incident_detected:', err);
+      }
+    });
+
     es.onerror = () => {
       setConnectionState('RECONNECTING');
     };

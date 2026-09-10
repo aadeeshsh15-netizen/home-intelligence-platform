@@ -8,7 +8,9 @@ export const SensorTypeEnum = z.enum([
   'POWER',
   'OCCUPANCY',
   'LIGHT',
-  'NOISE'
+  'NOISE',
+  'WATER_FLOW',
+  'CONTACT'
 ]);
 
 export const SensorHealthEnum = z.enum(['HEALTHY', 'STALE', 'FAULTY', 'OFFLINE']);
@@ -48,7 +50,8 @@ export function validatePhysicalBounds(type: string, value: number): { valid: bo
       if (value < 0 || value > 100000) return { valid: false, reason: `Power ${value} W cannot be negative or absurdly high` };
       break;
     case 'OCCUPANCY':
-      if (value !== 0 && value !== 1) return { valid: false, reason: `Occupancy must be binary (0 or 1)` };
+    case 'CONTACT':
+      if (value !== 0 && value !== 1) return { valid: false, reason: `${type} must be binary (0 or 1)` };
       break;
     case 'LIGHT':
       if (value < 0 || value > 150000) return { valid: false, reason: `Light ${value} lux is outside plausible bounds` };
@@ -58,6 +61,9 @@ export function validatePhysicalBounds(type: string, value: number): { valid: bo
       break;
     case 'PM2_5':
       if (value < 0 || value > 1000) return { valid: false, reason: `PM2.5 ${value} µg/m³ is outside plausible atmospheric bounds (0 to 1000)` };
+      break;
+    case 'WATER_FLOW':
+      if (value < 0 || value > 200) return { valid: false, reason: `Water flow ${value} L/min cannot be negative or absurdly high` };
       break;
   }
   return { valid: true };
@@ -76,6 +82,8 @@ export function validateSensorUnit(type: string, unit: string): { valid: boolean
     OCCUPANCY: ['binary', 'boolean'],
     LIGHT: ['lux'],
     NOISE: ['dB'],
+    WATER_FLOW: ['L/min', 'lpm', 'gpm'],
+    CONTACT: ['binary', 'boolean', 'state'],
   };
 
   const allowed = EXPECTED_UNITS[type];

@@ -11,7 +11,14 @@ import { evaluateDeviceAndSensorConnectivity } from '../event-engine/rules';
 import { logger } from '@/lib/logger';
 
 export interface AnomalyInjection {
-  type: 'AC_FAILURE' | 'WINDOW_OPEN' | 'POWER_SURGE' | 'SHOWER_SURGE' | 'CO2_SPIKE';
+  type:
+    | 'AC_FAILURE'
+    | 'WINDOW_OPEN'
+    | 'POWER_SURGE'
+    | 'SHOWER_SURGE'
+    | 'CO2_SPIKE'
+    | 'COOKING_EVENT'
+    | 'WATER_LEAK';
   roomId: string;
   active: boolean;
   intensity: number; // 1.0 = normal
@@ -77,6 +84,8 @@ class TelemetrySimulatorEngine {
         const powerSurge = this.injectedAnomalies.get(`${room.id}_POWER_SURGE`)?.active;
         const showerSurge = this.injectedAnomalies.get(`${room.id}_SHOWER_SURGE`)?.active;
         const co2Spike = this.injectedAnomalies.get(`${room.id}_CO2_SPIKE`)?.active;
+        const cookingEvent = this.injectedAnomalies.get(`${room.id}_COOKING_EVENT`)?.active;
+        const waterLeak = this.injectedAnomalies.get(`${room.id}_WATER_LEAK`)?.active;
 
         const hvacActive = !acFailure && (isOccupied || Math.abs((room.targetTemp || 21.5) - outdoor.temperature) > 3.0);
         const hvacMode = outdoor.temperature > 22.0 ? 'COOLING' : 'HEATING';
@@ -89,7 +98,12 @@ class TelemetrySimulatorEngine {
             case 'TEMPERATURE':
               if (windowOpen) {
                 // Room drifts rapidly toward outdoor temperature
-                nextVal = currentVal + (outdoor.temperature - currentVal) * 0.08;
+                const drift = outdoor.temperature < currentVal ? -0.35 : 0.35;
+                nextVal = currentVal + drift;
+              } else if (cookingEvent) {
+                nextVal = currentVal + 0.35; // Progressive culinary heat plume
+              } else if (acFailure) {
+                nextVal = currentVal + 0.28; // Uncontrolled temperature climb
               } else {
                 const targetTemp = room.targetTemp || 21.5;
                 let active = false;
@@ -116,14 +130,18 @@ class TelemetrySimulatorEngine {
               break;
 
             case 'HUMIDITY':
-              nextVal = stepRoomHumidity(
-                currentVal,
-                room.roomType,
-                isOccupied ? 1 : 0,
-                showerSurge || (room.roomType === 'BATHROOM' && hour >= 7.2 && hour <= 7.5),
-                false,
-                5
-              );
+              if (waterLeak) {
+                nextVal = Math.max(86.0, Math.min(95, currentVal + 8.0));
+              } else {
+                nextVal = stepRoomHumidity(
+                  currentVal,
+                  room.roomType,
+                  isOccupied ? 1 : 0,
+                  showerSurge || (room.roomType === 'BATHROOM' && hour >= 7.2 && hour <= 7.5),
+                  false,
+                  5
+                );
+              }
               break;
 
             case 'CO2':
@@ -139,12 +157,24 @@ class TelemetrySimulatorEngine {
               let basePower = getSimulatedRoomPower(room.roomType, now, isOccupied, hvacActive);
               if (powerSurge) {
                 basePower += 2800; // e.g. faulty heating element or EV charger rogue draw
+              } else if (cookingEvent) {
+                basePower += 1800; // Induction stove / oven active
+              } else if (acFailure) {
+                basePower += 1100; // Compressor running continuously
+              } else if (windowOpen) {
+                basePower += 650; // HVAC heating/cooling counter-response
               }
               nextVal = basePower;
               break;
 
             case 'OCCUPANCY':
-              nextVal = isOccupied ? 1 : 0;
+              if (cookingEvent) {
+                nextVal = 1;
+              } else if (waterLeak) {
+                nextVal = 0;
+              } else {
+                nextVal = isOccupied ? 1 : 0;
+              }
               break;
 
             case 'LIGHT':
@@ -160,9 +190,21 @@ class TelemetrySimulatorEngine {
               break;
 
             case 'PM2_5':
-              let pm = 8.0;
-              if (room.roomType === 'KITCHEN' && hour >= 19.0 && hour <= 19.8) pm = 48.0; // Sautéing
-              nextVal = Number((pm + (Math.random() - 0.5) * 1.5).toFixed(1));
+              if (cookingEvent) {
+                nextVal = Math.max(38.0, Math.min(250, currentVal + 14.0));
+              } else {
+                let pm = 8.0;
+                if (room.roomType === 'KITCHEN' && hour >= 19.0 && hour <= 19.8) pm = 48.0; // Sautéing
+                nextVal = Number((pm + (Math.random() - 0.5) * 1.5).toFixed(1));
+              }
+              break;
+
+            case 'WATER_FLOW':
+              nextVal = waterLeak ? 4.2 : 0.0;
+              break;
+
+            case 'CONTACT':
+              nextVal = windowOpen ? 1 : 0;
               break;
           }
 

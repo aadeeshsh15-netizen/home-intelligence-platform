@@ -243,6 +243,8 @@ export default function SimulatorStudioPage() {
                 onChange={(e) => setSelectedAnomalyType(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-slate-200"
               >
+                <option value="COOKING_EVENT">COOKING_EVENT: Multi-sensor culinary load (Power + Temp + PM2.5 + Occupancy)</option>
+                <option value="WATER_LEAK">WATER_LEAK: Continuous pipe flow + moisture saturation (Unoccupied)</option>
                 <option value="POWER_SURGE">POWER_SURGE: Auxiliary appliance rogue draw (+2.8 kW)</option>
                 <option value="WINDOW_OPEN">WINDOW_OPEN: Thermal envelope leak (rapid drift to outdoors)</option>
                 <option value="AC_FAILURE">AC_FAILURE: HVAC compressor trip (temperature climbs uncontrolled)</option>
@@ -257,8 +259,119 @@ export default function SimulatorStudioPage() {
               className="w-full text-xs font-mono"
             >
               <AlertOctagon className="w-3.5 h-3.5 mr-1" />
-              <span>Inject Anomaly into Live Loop</span>
+              <span>Inject Selected Anomaly into Live Loop</span>
             </Button>
+
+            <div className="pt-3 border-t border-slate-800/80 space-y-2">
+              <span className="text-[11px] font-mono text-slate-400 block font-semibold">
+                Phase 2 Cross-Sensor Incident Scenarios:
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const kitchen = rooms.find((r) => r.roomType === 'KITCHEN') || rooms[0];
+                    if (kitchen) {
+                      setSelectedRoomId(kitchen.id);
+                      setSelectedAnomalyType('COOKING_EVENT');
+                      fetch('/api/simulator', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'inject_anomaly',
+                          anomaly: { type: 'COOKING_EVENT', roomId: kitchen.id, active: true, intensity: 1.5 },
+                        }),
+                      }).then(() => {
+                        addLog(`Injected COOKING_EVENT into ${kitchen.name}`);
+                        fetchRoomsAndStatus();
+                      });
+                    }
+                  }}
+                  className="text-[11px] font-mono border-amber-900/60 hover:bg-amber-950/40 text-amber-300 justify-start"
+                >
+                  🍳 Kitchen Cooking Event
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const bath = rooms.find((r) => r.roomType === 'BATHROOM') || rooms[0];
+                    if (bath) {
+                      setSelectedRoomId(bath.id);
+                      setSelectedAnomalyType('WATER_LEAK');
+                      fetch('/api/simulator', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'inject_anomaly',
+                          anomaly: { type: 'WATER_LEAK', roomId: bath.id, active: true, intensity: 1.5 },
+                        }),
+                      }).then(() => {
+                        addLog(`Injected WATER_LEAK into ${bath.name}`);
+                        fetchRoomsAndStatus();
+                      });
+                    }
+                  }}
+                  className="text-[11px] font-mono border-rose-900/60 hover:bg-rose-950/40 text-rose-300 justify-start"
+                >
+                  💧 Bathroom Water Leak
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const living = rooms.find((r) => r.roomType === 'LIVING_ROOM') || rooms[0];
+                    if (living) {
+                      setSelectedRoomId(living.id);
+                      setSelectedAnomalyType('AC_FAILURE');
+                      fetch('/api/simulator', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'inject_anomaly',
+                          anomaly: { type: 'AC_FAILURE', roomId: living.id, active: true, intensity: 1.5 },
+                        }),
+                      }).then(() => {
+                        addLog(`Injected AC_FAILURE into ${living.name}`);
+                        fetchRoomsAndStatus();
+                      });
+                    }
+                  }}
+                  className="text-[11px] font-mono border-orange-900/60 hover:bg-orange-950/40 text-orange-300 justify-start"
+                >
+                  ❄️ AC Cooling Failure
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const living = rooms.find((r) => r.roomType === 'LIVING_ROOM') || rooms[0];
+                    if (living) {
+                      setSelectedRoomId(living.id);
+                      setSelectedAnomalyType('WINDOW_OPEN');
+                      fetch('/api/simulator', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'inject_anomaly',
+                          anomaly: { type: 'WINDOW_OPEN', roomId: living.id, active: true, intensity: 1.5 },
+                        }),
+                      }).then(() => {
+                        addLog(`Injected WINDOW_OPEN into ${living.name}`);
+                        fetchRoomsAndStatus();
+                      });
+                    }
+                  }}
+                  className="text-[11px] font-mono border-sky-900/60 hover:bg-sky-950/40 text-sky-300 justify-start"
+                >
+                  🪟 Window Thermal Breach
+                </Button>
+              </div>
+            </div>
           </div>
         </Card>
 

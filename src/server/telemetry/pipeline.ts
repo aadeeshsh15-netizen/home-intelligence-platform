@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { IngestTelemetryPayload, validatePhysicalBounds, validateSensorUnit } from '@/domain/telemetry.schema';
 import { evaluateSensorRules, systemEventsBus } from '../event-engine/rules';
 import { evaluateTelemetryAnomaly } from '../intelligence/anomaly';
+import { CrossSensorCorrelationEngine } from '../intelligence/correlation/engine';
 import { SensorHealth, DeviceStatus, InsightType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
@@ -36,6 +37,8 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
     quality: string;
   }[] = [];
 
+  const affectedHomeIds = new Set<string>();
+
   for (const reading of payload.readings) {
     const sensor = await prisma.sensor.findUnique({
       where: { id: reading.sensorId },
@@ -58,6 +61,7 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
     }
 
     const homeId = sensor.room.floor.home.id;
+    affectedHomeIds.add(homeId);
 
     // 1. Physical bounds validation
     const bounds = validatePhysicalBounds(sensor.type, reading.value);
@@ -198,6 +202,11 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
     });
     summary.processedCount = result.count;
     summary.duplicateCount = validReadings.length - result.count;
+  }
+
+  // 7. Evaluate Cross-Sensor Incident Intelligence Engine
+  for (const homeId of affectedHomeIds) {
+    await CrossSensorCorrelationEngine.processIngestedBatch(homeId, new Date());
   }
 
   return summary;

@@ -35,6 +35,8 @@ export const SENSOR_MINIMUM_STD_DEV: Record<string, number> = {
   NOISE: 3.0,       // ±3 dB acoustic noise threshold
   LIGHT: 25.0,      // ±25 lux ambient light tolerance
   PM2_5: 3.0,       // ±3 µg/m³ particle sensor tolerance
+  WATER_FLOW: 0.2,  // ±0.2 L/min flow tolerance
+  CONTACT: 0.1,     // binary state tolerance
 };
 
 export class StatisticalZScoreDetector implements IAnomalyDetector {

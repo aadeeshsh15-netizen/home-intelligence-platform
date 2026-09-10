@@ -1,4 +1,14 @@
-import { SensorType, SensorHealth, DeviceStatus, DeviceProtocol, SeverityLevel, EventStatus, InsightType } from '@prisma/client';
+import {
+  SensorType,
+  SensorHealth,
+  DeviceStatus,
+  DeviceProtocol,
+  SeverityLevel,
+  EventStatus,
+  InsightType,
+  IncidentStatus,
+  IncidentType,
+} from '@prisma/client';
 
 export type {
   SensorType,
@@ -7,7 +17,9 @@ export type {
   DeviceProtocol,
   SeverityLevel,
   EventStatus,
-  InsightType
+  InsightType,
+  IncidentStatus,
+  IncidentType,
 };
 
 export interface RoomWithSensors {
@@ -108,3 +120,42 @@ export interface AnomalyExplanation {
   timestamp: string;
   narrative: string;
 }
+
+export interface ContributingSensorEvidence {
+  sensorId: string;
+  sensorType: SensorType;
+  roomName: string;
+  signalType: 'ANOMALY_ZSCORE' | 'THRESHOLD_BREACH' | 'STATE_MATCH' | 'RATE_OF_CHANGE' | 'INACTIVITY';
+  observedValue: number;
+  unit: string;
+  referenceValue?: number;
+  deviationPercent?: number;
+  zScore?: number;
+  weight: number;
+  satisfied: boolean;
+  timestamp: string;
+  explanation: string;
+}
+
+export interface IncidentSummary {
+  id: string;
+  homeId: string;
+  roomId?: string | null;
+  roomName?: string | null;
+  incidentType: IncidentType;
+  severity: SeverityLevel;
+  status: IncidentStatus;
+  title: string;
+  summary: string;
+  explanation: string;
+  confidence: number;
+  correlationWindowMs: number;
+  startedAt: string;
+  detectedAt: string;
+  resolvedAt?: string | null;
+  lastEvidenceAt: string;
+  evidence: ContributingSensorEvidence[];
+  createdAt: string;
+  updatedAt: string;
+}
+

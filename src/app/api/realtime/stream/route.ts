@@ -31,11 +31,17 @@ export async function GET(req: NextRequest) {
       const handleEventCreated = (data: any) => sendEvent('event_created', data);
       const handleInsightGenerated = (data: any) => sendEvent('insight_generated', data);
       const handleHealthChanged = (data: any) => sendEvent('health_changed', data);
+      const handleIncidentDetected = (data: any) => sendEvent('incident_detected', data);
+      const handleIncidentUpdated = (data: any) => sendEvent('incident_updated', data);
+      const handleIncidentResolved = (data: any) => sendEvent('incident_resolved', data);
 
       systemEventsBus.on('telemetry_tick', handleTelemetryTick);
       systemEventsBus.on('event_created', handleEventCreated);
       systemEventsBus.on('insight_generated', handleInsightGenerated);
       systemEventsBus.on('sensor_health_changed', handleHealthChanged);
+      systemEventsBus.on('incident_detected', handleIncidentDetected);
+      systemEventsBus.on('incident_updated', handleIncidentUpdated);
+      systemEventsBus.on('incident_resolved', handleIncidentResolved);
 
       // Keepalive heartbeat every 15 seconds
       const heartbeatInterval = setInterval(() => {
@@ -58,6 +64,9 @@ export async function GET(req: NextRequest) {
         systemEventsBus.off('event_created', handleEventCreated);
         systemEventsBus.off('insight_generated', handleInsightGenerated);
         systemEventsBus.off('sensor_health_changed', handleHealthChanged);
+        systemEventsBus.off('incident_detected', handleIncidentDetected);
+        systemEventsBus.off('incident_updated', handleIncidentUpdated);
+        systemEventsBus.off('incident_resolved', handleIncidentResolved);
         try {
           controller.close();
         } catch (_) {}

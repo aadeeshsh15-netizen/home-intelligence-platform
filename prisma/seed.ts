@@ -235,6 +235,7 @@ async function main() {
     { roomId: rooms['Living Room'].id, deviceId: devices['MEDIA-LR-002'].id, type: SensorType.POWER, unit: 'W', minExpectedValue: 0, maxExpectedValue: 4000, samplingIntervalSec: 15 },
     { roomId: rooms['Living Room'].id, deviceId: null, type: SensorType.OCCUPANCY, unit: 'binary', minExpectedValue: 0, maxExpectedValue: 1, samplingIntervalSec: 10 },
     { roomId: rooms['Living Room'].id, deviceId: null, type: SensorType.NOISE, unit: 'dB', minExpectedValue: 25, maxExpectedValue: 100, samplingIntervalSec: 15 },
+    { roomId: rooms['Living Room'].id, deviceId: null, type: SensorType.CONTACT, unit: 'binary', minExpectedValue: 0, maxExpectedValue: 1, samplingIntervalSec: 10 },
 
     // Kitchen & Dining
     { roomId: rooms['Kitchen & Dining'].id, deviceId: null, type: SensorType.TEMPERATURE, unit: '°C', minExpectedValue: 10, maxExpectedValue: 40, samplingIntervalSec: 30 },
@@ -262,6 +263,8 @@ async function main() {
     { roomId: rooms['Main En-Suite Bath'].id, deviceId: devices['VENT-MB-001'].id, type: SensorType.TEMPERATURE, unit: '°C', minExpectedValue: 10, maxExpectedValue: 38, samplingIntervalSec: 30 },
     { roomId: rooms['Main En-Suite Bath'].id, deviceId: devices['VENT-MB-001'].id, type: SensorType.HUMIDITY, unit: '%', minExpectedValue: 20, maxExpectedValue: 98, samplingIntervalSec: 15 },
     { roomId: rooms['Main En-Suite Bath'].id, deviceId: devices['VENT-MB-001'].id, type: SensorType.POWER, unit: 'W', minExpectedValue: 0, maxExpectedValue: 1800, samplingIntervalSec: 30 },
+    { roomId: rooms['Main En-Suite Bath'].id, deviceId: null, type: SensorType.WATER_FLOW, unit: 'L/min', minExpectedValue: 0, maxExpectedValue: 30, samplingIntervalSec: 10 },
+    { roomId: rooms['Main En-Suite Bath'].id, deviceId: null, type: SensorType.OCCUPANCY, unit: 'binary', minExpectedValue: 0, maxExpectedValue: 1, samplingIntervalSec: 10 },
 
     // Guest Bedroom
     { roomId: rooms['Guest Bedroom'].id, deviceId: null, type: SensorType.TEMPERATURE, unit: '°C', minExpectedValue: 10, maxExpectedValue: 35, samplingIntervalSec: 30 },
@@ -334,6 +337,8 @@ async function main() {
     if (s.type === SensorType.LIGHT) init = 200;
     if (s.type === SensorType.NOISE) init = 32;
     if (s.type === SensorType.PM2_5) init = 7.0;
+    if (s.type === SensorType.WATER_FLOW) init = 0.0;
+    if (s.type === SensorType.CONTACT) init = 0;
     sensorState.set(s.id, init);
   });
 
@@ -410,6 +415,13 @@ async function main() {
           let pm = 6.0;
           if (roomType === 'KITCHEN' && hour >= 19.0 && hour <= 20.0) pm = 45.0;
           nextVal = Number((pm + (Math.random() - 0.5) * 2).toFixed(1));
+          break;
+        case SensorType.WATER_FLOW:
+          const isBathShower = roomType === 'BATHROOM' && hour >= 7.0 && hour <= 7.5;
+          nextVal = isBathShower ? 5.5 : 0.0;
+          break;
+        case SensorType.CONTACT:
+          nextVal = 0; // Windows normally closed
           break;
       }
 
