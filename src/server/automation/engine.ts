@@ -11,6 +11,8 @@ import { CommandDispatcher } from './dispatcher';
 import { ensureDefaultPolicies } from './policies';
 import { systemEventsBus } from '@/server/event-engine/rules';
 import { logger } from '@/lib/logger';
+import { metricsService } from '@/server/observability/metrics';
+import { recordSystemEvent } from '@/server/observability/events';
 
 export class AutomationDecisionEngine {
   /**
@@ -149,6 +151,24 @@ export class AutomationDecisionEngine {
           module: 'automation-engine',
         });
 
+        metricsService.recordCommandRejected();
+        recordSystemEvent({
+          homeId,
+          category: 'AUTOMATION',
+          eventType: 'AUTOMATION_SAFETY_REJECTED',
+          severity: 'WARNING',
+          source: 'AUTOMATION_ENGINE',
+          entityType: 'POLICY',
+          entityId: matchingPolicy.id,
+          summary: `Safety guardrail rejected ${matchingPolicy.name}: ${safety.rejectionReason}`,
+          metadata: {
+            policyName: matchingPolicy.name,
+            rejectionReason: safety.rejectionReason,
+            action: candidate.action,
+            targetDeviceType: candidate.targetDeviceType,
+          },
+        });
+
         decisions.push({
           approved: false,
           candidateAction: candidate,
@@ -208,6 +228,24 @@ export class AutomationDecisionEngine {
         deviceId: safety.deviceCheck.deviceId,
         action: candidate.action,
         status: execution.status,
+      });
+
+      recordSystemEvent({
+        homeId,
+        category: 'AUTOMATION',
+        eventType: 'AUTOMATION_TRIGGERED',
+        severity: 'INFO',
+        source: 'AUTOMATION_ENGINE',
+        entityType: 'POLICY',
+        entityId: matchingPolicy.id,
+        summary: `Policy ${matchingPolicy.name} triggered: ${candidate.action} on device ${safety.deviceCheck.deviceId}`,
+        metadata: {
+          executionId: execution.id,
+          commandId: dispatchResult.commandId,
+          action: candidate.action,
+          deviceId: safety.deviceCheck.deviceId,
+          expectedOutcome: candidate.expectedOutcome,
+        },
       });
 
       decisions.push({

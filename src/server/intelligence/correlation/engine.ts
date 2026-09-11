@@ -10,6 +10,8 @@ import {
 import { systemEventsBus } from '@/server/event-engine/rules';
 import { logger } from '@/lib/logger';
 import { IncidentStatus, SeverityLevel } from '@prisma/client';
+import { metricsService } from '@/server/observability/metrics';
+import { recordSystemEvent } from '@/server/observability/events';
 
 export class CrossSensorCorrelationEngine {
   /**
@@ -387,7 +389,24 @@ export class CrossSensorCorrelationEngine {
           },
         });
         newCount++;
+        metricsService.recordIncidentDetected();
         systemEventsBus.emit('incident_detected', created);
+
+        recordSystemEvent({
+          homeId: candidate.homeId,
+          category: 'INCIDENT',
+          eventType: 'INCIDENT_DETECTED',
+          severity: candidate.severity,
+          source: 'CORRELATION_ENGINE',
+          entityType: 'INCIDENT',
+          entityId: created.id,
+          summary: `${candidate.title} (confidence: ${(candidate.confidence * 100).toFixed(0)}%)`,
+          metadata: {
+            incidentType: candidate.incidentType,
+            confidence: candidate.confidence,
+            roomId: candidate.roomId,
+          },
+        });
       }
     }
 
@@ -440,6 +459,22 @@ export class CrossSensorCorrelationEngine {
           });
           resolvedCount++;
           systemEventsBus.emit('incident_resolved', resolved);
+
+          recordSystemEvent({
+            homeId,
+            category: 'INCIDENT',
+            eventType: 'INCIDENT_RESOLVED',
+            severity: 'INFO',
+            source: 'CORRELATION_ENGINE',
+            entityType: 'INCIDENT',
+            entityId: incident.id,
+            summary: `Incident ${incident.incidentType} resolved (normalized to baseline)`,
+            metadata: {
+              incidentType: incident.incidentType,
+              roomId: incident.roomId,
+            },
+          });
+
           logger.info('Incident transitioned to RESOLVED', {
             incidentId: incident.id,
             incidentType: incident.incidentType,

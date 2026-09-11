@@ -96,10 +96,10 @@ describe('Phase 7: Closed-Loop Intelligent Automation Benchmark Suite', () => {
       where: { roomId: room.id, type: 'POWER' },
     });
 
-    // Mark any past predictive incidents as RESOLVED for benchmark isolation
+    // Mark any past predictive incidents as DISMISSED for benchmark isolation
     await prisma.predictiveIncident.updateMany({
       where: { homeId: home.id, status: PredictiveIncidentStatus.PREDICTED },
-      data: { status: PredictiveIncidentStatus.RESOLVED },
+      data: { status: PredictiveIncidentStatus.DISMISSED },
     });
   });
 

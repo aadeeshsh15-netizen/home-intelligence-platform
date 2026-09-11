@@ -109,6 +109,14 @@ describe('Intelligence Layer Controlled Evaluation Scenarios', () => {
     const t0 = performance.now();
     const now = Date.now();
 
+    // Clean up any recent readings from previous tests to ensure deterministic slope
+    await prisma.telemetryReading.deleteMany({
+      where: {
+        sensorId: bedroomCO2Sensor.id,
+        timestamp: { gte: new Date(now - 35 * 60 * 1000) },
+      },
+    });
+
     // Ingest progressive accumulation over 30 mins
     const readings = [
       { timestamp: new Date(now - 25 * 60 * 1000).toISOString(), value: 450 },

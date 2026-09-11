@@ -184,6 +184,18 @@ enum ActuatorAction {
   SHED_LOAD
 }
 
+enum SystemEventCategory {
+  TELEMETRY
+  ANOMALY
+  INCIDENT
+  PREDICTION
+  AUTOMATION
+  COMMAND
+  SECURITY
+  SYSTEM
+}
+
+
 
 model User {
   id           String    @id @default(cuid())
@@ -213,6 +225,7 @@ model Home {
   automationPolicies AutomationPolicy[]
   deviceCommands   DeviceCommand[]
   automationExecutions AutomationExecution[]
+  systemEvents     SystemEvent[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -592,6 +605,28 @@ model AutomationExecution {
   @@index([homeId, status, createdAt(sort: Desc)])
   @@index([policyId, createdAt(sort: Desc)])
 }
+
+model SystemEvent {
+  id            String              @id @default(cuid())
+  homeId        String
+  home          Home                @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  timestamp     DateTime            @default(now())
+  category      SystemEventCategory
+  eventType     String              // e.g. "TELEMETRY_INGESTED", "VALIDATION_FAILED", "ANOMALY_DETECTED", "COMMAND_DISPATCHED"
+  severity      SeverityLevel       @default(INFO)
+  source        String              // e.g. "TELEMETRY_PIPELINE", "AUTOMATION_ENGINE"
+  entityType    String              // "DEVICE", "SENSOR", "INCIDENT", "PREDICTIVE_INCIDENT", "POLICY", "COMMAND", "SYSTEM"
+  entityId      String?
+  summary       String
+  metadata      Json?
+  correlationId String?
+
+  @@index([homeId, timestamp(sort: Desc)])
+  @@index([homeId, category, timestamp(sort: Desc)])
+  @@index([homeId, severity, timestamp(sort: Desc)])
+  @@index([correlationId])
+}
+
 
 
 

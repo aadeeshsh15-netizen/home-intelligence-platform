@@ -257,6 +257,7 @@ describe('Cross-Sensor Correlation Engine - Mathematical Derivations', () => {
             explanation: 'Occupant presence verified',
           },
         ],
+        allEvidence: [],
         allSignals: [],
         windowSeconds: rule.correlationWindowSeconds,
       });

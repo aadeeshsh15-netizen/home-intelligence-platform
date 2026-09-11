@@ -14,6 +14,8 @@ import {
 } from '@/domain/types';
 import { systemEventsBus } from '@/server/event-engine/rules';
 import { logger } from '@/lib/logger';
+import { metricsService } from '@/server/observability/metrics';
+import { recordSystemEvent } from '@/server/observability/events';
 
 export class PredictiveIncidentEngine {
   /**
@@ -101,7 +103,26 @@ export class PredictiveIncidentEngine {
         });
 
         formedCandidates.push(candidate);
+        metricsService.recordIncidentPredicted();
         systemEventsBus.emit('predictive_incident_created', created);
+
+        recordSystemEvent({
+          homeId: candidate.homeId,
+          category: 'PREDICTION',
+          eventType: 'INCIDENT_PREDICTED',
+          severity: candidate.severity,
+          source: 'PREDICTIVE_ENGINE',
+          entityType: 'PREDICTIVE_INCIDENT',
+          entityId: created.id,
+          summary: `${candidate.title} (prob: ${(candidate.probability * 100).toFixed(0)}%, lead time: ${candidate.predictedLeadTimeMin}m)`,
+          metadata: {
+            type: candidate.type,
+            probability: candidate.probability,
+            confidence: candidate.confidence,
+            leadTimeMin: candidate.predictedLeadTimeMin,
+            horizonMinutes: candidate.horizonMinutes,
+          },
+        });
 
         logger.info('Early Warning Generated', {
           id: created.id,
@@ -233,6 +254,22 @@ export class PredictiveIncidentEngine {
             },
           });
 
+          recordSystemEvent({
+            homeId,
+            category: 'PREDICTION',
+            eventType: 'PREDICTION_CONFIRMED',
+            severity: 'WARNING',
+            source: 'PREDICTIVE_ENGINE',
+            entityType: 'PREDICTIVE_INCIDENT',
+            entityId: pred.id,
+            summary: `Prediction confirmed: ${pred.type} threshold crossed (lead time: ${actualLeadTime}m)`,
+            metadata: {
+              type: pred.type,
+              actualLeadTimeMin: actualLeadTime,
+              outcome: 'TRUE_POSITIVE',
+            },
+          });
+
           confirmedCount++;
           continue;
         }
@@ -247,6 +284,21 @@ export class PredictiveIncidentEngine {
             outcome: 'FALSE_POSITIVE',
             evaluatedAt: currentTimestamp,
             updatedAt: currentTimestamp,
+          },
+        });
+
+        recordSystemEvent({
+          homeId,
+          category: 'PREDICTION',
+          eventType: 'PREDICTION_EXPIRED',
+          severity: 'INFO',
+          source: 'PREDICTIVE_ENGINE',
+          entityType: 'PREDICTIVE_INCIDENT',
+          entityId: pred.id,
+          summary: `Prediction expired: ${pred.type} horizon lapsed without threshold breach`,
+          metadata: {
+            type: pred.type,
+            outcome: 'FALSE_POSITIVE',
           },
         });
 

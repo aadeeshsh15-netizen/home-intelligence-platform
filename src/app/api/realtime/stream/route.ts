@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
       const handleIncidentDetected = (data: any) => sendEvent('incident_detected', data);
       const handleIncidentUpdated = (data: any) => sendEvent('incident_updated', data);
       const handleIncidentResolved = (data: any) => sendEvent('incident_resolved', data);
+      const handleSystemEvent = (data: any) => sendEvent('system_event', data);
 
       systemEventsBus.on('telemetry_tick', handleTelemetryTick);
       systemEventsBus.on('event_created', handleEventCreated);
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
       systemEventsBus.on('incident_detected', handleIncidentDetected);
       systemEventsBus.on('incident_updated', handleIncidentUpdated);
       systemEventsBus.on('incident_resolved', handleIncidentResolved);
+      systemEventsBus.on('system_event', handleSystemEvent);
 
       // Keepalive heartbeat every 15 seconds
       const heartbeatInterval = setInterval(() => {
@@ -67,6 +69,7 @@ export async function GET(req: NextRequest) {
         systemEventsBus.off('incident_detected', handleIncidentDetected);
         systemEventsBus.off('incident_updated', handleIncidentUpdated);
         systemEventsBus.off('incident_resolved', handleIncidentResolved);
+        systemEventsBus.off('system_event', handleSystemEvent);
         try {
           controller.close();
         } catch (_) {}

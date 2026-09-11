@@ -8,6 +8,8 @@ import {
 import { VerificationEvaluation } from './types';
 import { systemEventsBus } from '@/server/event-engine/rules';
 import { logger } from '@/lib/logger';
+import { metricsService } from '@/server/observability/metrics';
+import { recordSystemEvent } from '@/server/observability/events';
 
 export class AutomationVerificationEngine {
   /**
@@ -178,6 +180,8 @@ export class AutomationVerificationEngine {
 
       evaluations.push(evalRecord);
 
+      metricsService.recordVerificationOutcome(finalVerificationStatus);
+
       systemEventsBus.emit('automation_verified', {
         executionId: execution.id,
         policyName: execution.policy.name,
@@ -185,6 +189,27 @@ export class AutomationVerificationEngine {
         isEffective,
         delta,
         summary: outcomeSummary,
+      });
+
+      recordSystemEvent({
+        homeId,
+        category: 'AUTOMATION',
+        eventType: 'ACTION_VERIFIED',
+        severity: isEffective ? 'INFO' : 'WARNING',
+        source: 'VERIFICATION_ENGINE',
+        entityType: 'AUTOMATION_EXECUTION',
+        entityId: execution.id,
+        summary: `Verification: ${finalVerificationStatus} (${outcomeSummary})`,
+        metadata: {
+          executionId: execution.id,
+          policyName: execution.policy.name,
+          verificationStatus: finalVerificationStatus,
+          isEffective,
+          delta,
+          observedValue,
+          baseline,
+          targetMetric,
+        },
       });
 
       logger.info('Automation intervention verified', {

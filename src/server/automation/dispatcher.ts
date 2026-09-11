@@ -5,6 +5,8 @@ import { mqttGateway } from '@/server/iot/mqtt-gateway';
 import { simulatorEngine } from '@/server/simulator/engine';
 import { systemEventsBus } from '@/server/event-engine/rules';
 import { logger } from '@/lib/logger';
+import { metricsService } from '@/server/observability/metrics';
+import { recordSystemEvent } from '@/server/observability/events';
 
 export interface DispatchCommandOptions {
   homeId: string;
@@ -66,6 +68,25 @@ export class CommandDispatcher {
         source,
         issuedAt: now,
         expiresAt,
+      },
+    });
+
+    metricsService.recordCommandDispatched();
+    recordSystemEvent({
+      homeId,
+      category: 'COMMAND',
+      eventType: 'COMMAND_DISPATCHED',
+      severity: 'INFO',
+      source: 'COMMAND_DISPATCHER',
+      entityType: 'COMMAND',
+      entityId: commandId,
+      summary: `Dispatched ${action} to device ${device.name || deviceId} (${device.protocol})`,
+      metadata: {
+        commandId,
+        action,
+        deviceId,
+        protocol: device.protocol,
+        parameters,
       },
     });
 

@@ -6,6 +6,8 @@ import { CrossSensorCorrelationEngine } from '../intelligence/correlation/engine
 import { PredictiveIncidentEngine } from '../intelligence/predictive-incidents/engine';
 import { AutomationDecisionEngine } from '../automation/engine';
 import { AutomationVerificationEngine } from '../automation/verification';
+import { metricsService } from '../observability/metrics';
+import { recordSystemEvent } from '../observability/events';
 import { SensorHealth, DeviceStatus, InsightType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
@@ -24,6 +26,7 @@ export interface IngestionSummary {
  * and external hardware IoT devices (MQTT/ESP32).
  */
 export async function processTelemetryIngest(payload: IngestTelemetryPayload): Promise<IngestionSummary> {
+  const startTime = Date.now();
   const summary: IngestionSummary = {
     processedCount: 0,
     rejectedCount: 0,
@@ -59,6 +62,7 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
 
     if (!sensor) {
       summary.rejectedCount++;
+      metricsService.recordValidationFailure();
       summary.errors.push(`Sensor ${reading.sensorId} does not exist in home model`);
       continue;
     }
@@ -70,6 +74,7 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
     const bounds = validatePhysicalBounds(sensor.type, reading.value);
     if (!bounds.valid) {
       summary.rejectedCount++;
+      metricsService.recordValidationFailure();
       summary.errors.push(`Sensor ${sensor.id} (${sensor.type}): ${bounds.reason}`);
       logger.warn('Physical boundary validation rejected reading', {
         sensorId: sensor.id,
@@ -77,6 +82,17 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
         value: reading.value,
         reason: bounds.reason,
         module: 'telemetry-ingest',
+      });
+      recordSystemEvent({
+        homeId,
+        category: 'TELEMETRY',
+        eventType: 'VALIDATION_FAILED',
+        severity: 'WARNING',
+        source: 'TELEMETRY_PIPELINE',
+        entityType: 'SENSOR',
+        entityId: sensor.id,
+        summary: `Sensor ${sensor.type} rejected: ${bounds.reason}`,
+        metadata: { value: reading.value, reason: bounds.reason },
       });
       continue;
     }
@@ -86,6 +102,7 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
       const unitCheck = validateSensorUnit(sensor.type, reading.unit);
       if (!unitCheck.valid) {
         summary.rejectedCount++;
+        metricsService.recordValidationFailure();
         summary.errors.push(
           `Sensor ${sensor.id} (${sensor.type}) invalid unit: "${reading.unit}". Expected: "${unitCheck.expectedUnit}"`
         );
@@ -94,6 +111,17 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
           unit: reading.unit,
           expectedUnit: unitCheck.expectedUnit,
           module: 'telemetry-ingest',
+        });
+        recordSystemEvent({
+          homeId,
+          category: 'TELEMETRY',
+          eventType: 'VALIDATION_FAILED',
+          severity: 'WARNING',
+          source: 'TELEMETRY_PIPELINE',
+          entityType: 'SENSOR',
+          entityId: sensor.id,
+          summary: `Sensor ${sensor.type} unit mismatch: received ${reading.unit}, expected ${unitCheck.expectedUnit}`,
+          metadata: { unit: reading.unit, expectedUnit: unitCheck.expectedUnit },
         });
         continue;
       }
@@ -108,10 +136,10 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
     });
 
     // 3. Out-of-order timestamp protection:
-    // Only update the live sensor state if incoming timestamp is newer than or equal to current lastReadingTime
-    const isNewest = !sensor.lastReadingTime || readingTime.getTime() >= sensor.lastReadingTime.getTime();
+    // Update sensor's lastReadingValue/Time ONLY if reading is newer than current record
+    const shouldUpdateLastSeen = !sensor.lastReadingTime || readingTime > sensor.lastReadingTime;
 
-    if (isNewest) {
+    if (shouldUpdateLastSeen) {
       await prisma.sensor.update({
         where: { id: sensor.id },
         data: {
@@ -130,25 +158,20 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
           },
         });
       }
-
-      // Broadcast live tick to SSE listeners
-      systemEventsBus.emit('telemetry_tick', {
-        sensorId: sensor.id,
-        roomId: sensor.roomId,
-        roomName: sensor.room.name,
-        type: sensor.type,
-        unit: sensor.unit,
-        value: reading.value,
-        timestamp: readingTime.toISOString(),
-      });
-    } else {
-      logger.debug('Processed historical out-of-order reading without overwriting live state', {
-        sensorId: sensor.id,
-        incomingTimestamp: readingTime.toISOString(),
-        currentLatestTimestamp: sensor.lastReadingTime?.toISOString(),
-        module: 'telemetry-ingest',
-      });
     }
+
+    // Emit live telemetry tick for SSE consumers
+    systemEventsBus.emit('telemetry_tick', {
+      sensorId: sensor.id,
+      sensorType: sensor.type,
+      roomId: sensor.roomId,
+      roomName: sensor.room?.name,
+      deviceId: sensor.deviceId,
+      value: reading.value,
+      unit: reading.unit,
+      timestamp: readingTime.toISOString(),
+      quality: reading.quality,
+    });
 
     // 4. Evaluate rules
     const ruleResults = await evaluateSensorRules(sensor.id, reading.value);
@@ -158,6 +181,7 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
     const anomaly = await evaluateTelemetryAnomaly(sensor.id, reading.value, readingTime);
     if (anomaly && anomaly.isAnomaly) {
       summary.anomaliesDetected++;
+      metricsService.recordAnomalyDetected();
 
       const existingInsight = await prisma.insight.findFirst({
         where: {
@@ -193,6 +217,23 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
         });
 
         systemEventsBus.emit('insight_generated', createdInsight);
+
+        recordSystemEvent({
+          homeId,
+          category: 'ANOMALY',
+          eventType: 'ANOMALY_DETECTED',
+          severity: 'WARNING',
+          source: 'TELEMETRY_PIPELINE',
+          entityType: 'SENSOR',
+          entityId: sensor.id,
+          summary: `${anomaly.title} (z-score: ${anomaly.zScore.toFixed(2)})`,
+          metadata: {
+            zScore: anomaly.zScore,
+            deviationPercent: anomaly.deviationPercent,
+            currentValue: reading.value,
+            baselineMean: anomaly.baselineMean,
+          },
+        });
       }
     }
   }
@@ -205,27 +246,40 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
     });
     summary.processedCount = result.count;
     summary.duplicateCount = validReadings.length - result.count;
+    metricsService.recordIngestedReadings(summary.processedCount);
+    if (summary.duplicateCount > 0) {
+      metricsService.recordDuplicateRejection(summary.duplicateCount);
+    }
   }
 
   // 7. Evaluate Cross-Sensor Incident Intelligence Engine
+  const corrStart = Date.now();
   for (const homeId of affectedHomeIds) {
     await CrossSensorCorrelationEngine.processIngestedBatch(homeId, new Date());
   }
+  metricsService.recordIncidentDetectionLatency(Date.now() - corrStart);
 
   // 8. Evaluate Predictive Incident Intelligence Engine
+  const predStart = Date.now();
   for (const homeId of affectedHomeIds) {
     await PredictiveIncidentEngine.processIngestedBatch(homeId, new Date());
   }
+  metricsService.recordPredictionLatency(Date.now() - predStart);
 
   // 9. Evaluate Closed-Loop Automation Decision Engine (Phase 7)
+  const autoStart = Date.now();
   for (const homeId of affectedHomeIds) {
     await AutomationDecisionEngine.processIngestedBatch(homeId, new Date());
   }
+  metricsService.recordAutomationDecisionLatency(Date.now() - autoStart);
 
   // 10. Verify Pending Closed-Loop Automation Interventions (Phase 7)
+  const verStart = Date.now();
   for (const homeId of affectedHomeIds) {
     await AutomationVerificationEngine.verifyPendingExecutions(homeId, new Date());
   }
+  metricsService.recordVerificationLatency(Date.now() - verStart);
 
+  metricsService.recordIngestionLatency(Date.now() - startTime);
   return summary;
 }

@@ -13,6 +13,8 @@ import { DeviceStatus, DeviceProtocol, SensorHealth, CommandStatus } from '@pris
 import { DeviceCommandPayload, DeviceAckPayloadSchema } from '@/domain/command.schema';
 import { logger } from '@/lib/logger';
 import { systemEventsBus } from '../event-engine/rules';
+import { metricsService } from '../observability/metrics';
+import { recordSystemEvent } from '../observability/events';
 
 export interface MqttGatewayConfig {
   brokerUrl: string;
@@ -478,11 +480,35 @@ export class MqttGatewayService {
       module: 'mqtt-gateway',
     });
 
+    const ackLatencyMs = now.getTime() - command.issuedAt.getTime();
+    metricsService.recordCommandAckLatency(ackLatencyMs);
+    metricsService.recordCommandAcknowledged();
+
     systemEventsBus.emit('command_acknowledged', {
       commandId,
       deviceId,
       status: nextStatus,
+      latencyMs: ackLatencyMs,
       timestamp: now.toISOString(),
+    });
+
+    recordSystemEvent({
+      homeId,
+      category: 'COMMAND',
+      eventType: 'COMMAND_ACKNOWLEDGED',
+      severity: nextStatus === 'FAILED' || nextStatus === 'REJECTED' ? 'WARNING' : 'INFO',
+      source: 'MQTT_GATEWAY',
+      entityType: 'COMMAND',
+      entityId: commandId,
+      summary: `Device ${deviceId} acknowledged command ${commandId} (${nextStatus}, ${ackLatencyMs}ms)`,
+      metadata: {
+        commandId,
+        status: nextStatus,
+        deviceId,
+        latencyMs: ackLatencyMs,
+        actualState,
+        reason,
+      },
     });
   }
 
@@ -505,6 +531,18 @@ export class MqttGatewayService {
         });
       });
     }
+  }
+
+  public isGatewayConnected(): boolean {
+    return this.isConnected;
+  }
+
+  public getStatus() {
+    return {
+      connected: this.isConnected,
+      brokerUrl: this.config.brokerUrl,
+      clientId: this.config.clientId,
+    };
   }
 }
 
