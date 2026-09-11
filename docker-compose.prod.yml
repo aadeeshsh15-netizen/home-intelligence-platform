@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: home_intelligence_prod_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
+      POSTGRES_DB: ${POSTGRES_DB:-home_intelligence}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d home_intelligence"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - platform_net
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: home_intelligence_prod_mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_prod_data:/mosquitto/data
+      - mosquitto_prod_log:/mosquitto/log
+    networks:
+      - platform_net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: home_intelligence_prod_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@postgres:5432/${POSTGRES_DB:-home_intelligence}?schema=public"
+      MQTT_BROKER_URL: "mqtt://mosquitto:1883"
+      NODE_ENV: production
+      PORT: 3000
+      APP_SECRET: ${APP_SECRET:-super-secret-production-grade-key-for-home-intel-platform-32char}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-production-grade-key-for-home-intel-platform-32char}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SIMULATOR_ENABLED: ${SIMULATOR_ENABLED:-true}
+      SIMULATOR_INTERVAL_MS: ${SIMULATOR_INTERVAL_MS:-5000}
+      TELEMETRY_STALE_THRESHOLD_SECONDS: ${TELEMETRY_STALE_THRESHOLD_SECONDS:-120}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+    ports:
+      - "3000:3000"
+    networks:
+      - platform_net
+
+volumes:
+  postgres_prod_data:
+  mosquitto_prod_data:
+  mosquitto_prod_log:
+
+networks:
+  platform_net:
+    driver: bridge
