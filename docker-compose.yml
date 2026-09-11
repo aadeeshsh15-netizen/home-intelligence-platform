@@ -19,6 +19,18 @@ services:
       timeout: 5s
       retries: 5
 
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: home_intelligence_mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+
   app:
     build:
       context: .
@@ -28,8 +40,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mosquitto:
+        condition: service_started
     environment:
       DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/home_intelligence?schema=public"
+      MQTT_BROKER_URL: "mqtt://mosquitto:1883"
       NODE_ENV: production
       PORT: 3000
     ports:
@@ -37,3 +52,5 @@ services:
 
 volumes:
   postgres_data:
+  mosquitto_data:
+  mosquitto_log:

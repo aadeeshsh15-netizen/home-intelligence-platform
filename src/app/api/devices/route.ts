@@ -12,12 +12,25 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
     }
 
-    const devices = await prisma.device.findMany({
-      where: {
-        room: {
-          floor: { homeId: auth.user.homeId },
-        },
+    const { searchParams } = new URL(req.url);
+    const protocolFilter = searchParams.get('protocol');
+    const statusFilter = searchParams.get('status');
+
+    const whereClause: any = {
+      room: {
+        floor: { homeId: auth.user.homeId },
       },
+    };
+
+    if (protocolFilter) {
+      whereClause.protocol = protocolFilter;
+    }
+    if (statusFilter) {
+      whereClause.status = statusFilter;
+    }
+
+    const devices = await prisma.device.findMany({
+      where: whereClause,
       include: {
         room: {
           select: {
