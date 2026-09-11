@@ -144,3 +144,56 @@ graph LR
 - **Batched Single-Query Aggregation**: Telemetry readings for all sensors across all rooms in a home are fetched in a single composite-indexed database query (`sensorId IN (...) AND timestamp BETWEEN ...`), grouping points in memory.
 - **Evaluation Latency**: Evaluates all rules across an entire household in **3.2 to 5.2 ms** (10x faster than the 50 ms benchmark target).
 - **False-Positive Immunity**: Achieves a **0.00% false-positive rate** under clean baseline conditions.
+
+---
+
+## 4. Phase 3: Predictive Home Intelligence Engine
+
+The platform moves from reactive correlation to multi-horizon forecasting for energy, micro-climate, and occupancy:
+
+```mermaid
+graph TD
+    subgraph FeaturePipeline ["Deterministic Feature Engineering Pipeline"]
+        CYC["Cyclical Encodings (sin/cos 24h & 7d)"]
+        LAGS["Lagged Readings (t-15m, t-1h, t-24h, t-168h)"]
+        ROLL["Rolling Moments (mean, std, linear drift slope)"]
+        QUAL["Data Quality Evaluator (<48h cold start, missing %)"]
+    end
+
+    subgraph Providers ["Provider Registry (IPredictionProvider)"]
+        P1["Seasonal Diurnal with Autoregressive Residual Decay"]
+        P2["Naive Persistence Baseline"]
+        P3["Exponential Moving Average with Momentum"]
+        P4["Bayesian Occupancy Prior with Motion Decay"]
+        P5["Pluggable Remote ML Microservice (Circuit Breaker)"]
+    end
+
+    subgraph Serving ["Inference & Serving Layer"]
+        CACHE["In-Memory Forecast Cache (30s TTL)"]
+        API["GET /api/predictions"]
+        MODELS_API["GET /api/predictions/models"]
+    end
+
+    subgraph Validation ["Continuous Evaluation Layer"]
+        WF["Rolling-Origin Walk-Forward Backtester"]
+        EVAL_API["POST /api/predictions/evaluate"]
+        DB_EVAL[("ModelEvaluation Store (PostgreSQL)")]
+    end
+
+    CYC --> Providers
+    LAGS --> Providers
+    ROLL --> Providers
+    QUAL --> Providers
+
+    Providers --> CACHE
+    CACHE --> API
+    Providers --> WF
+    WF --> DB_EVAL
+    DB_EVAL --> EVAL_API
+```
+
+### Hybrid Persistence Architecture
+- **Inference on Demand**: Forecasts across $15\text{m}, 1\text{h}, 4\text{h}, 24\text{h}$ horizons are generated dynamically on demand to avoid generating millions of perishable database rows.
+- **In-Memory Caching**: A memory cache with a 30-second TTL prevents repeated database queries under concurrent UI dashboard refresh.
+- **Durable Evaluations**: Continuous rolling-origin backtests persist out-of-sample metrics ($\text{MAE}$, $\text{RMSE}$, $\text{MAPE}$, latency, and horizon degradation) into `ModelEvaluation` records for model comparison and auditing.
+

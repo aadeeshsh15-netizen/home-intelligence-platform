@@ -18,10 +18,14 @@ import {
   Cpu,
   Radio,
   Clock,
+  Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 import {
   LineChart,
   Line,
+  Area,
+  ComposedChart,
   XAxis,
   YAxis,
   Tooltip,
@@ -37,6 +41,10 @@ export default function RoomDetailPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Predictive room intelligence
+  const [tempForecast, setTempForecast] = useState<any>(null);
+  const [occupancyForecast, setOccupancyForecast] = useState<any>(null);
+
   useEffect(() => {
     async function load() {
       try {
@@ -51,6 +59,28 @@ export default function RoomDetailPage() {
       }
     }
     if (roomId) load();
+  }, [roomId]);
+
+  useEffect(() => {
+    async function loadPredictions() {
+      if (!roomId) return;
+      try {
+        // Temperature forecast for room
+        const tRes = await fetch(`/api/predictions?target=ROOM_TEMPERATURE&roomId=${roomId}&horizon=4h`);
+        if (tRes.ok) {
+          setTempForecast(await tRes.json());
+        }
+
+        // Occupancy probability forecast for room
+        const oRes = await fetch(`/api/predictions?target=OCCUPANCY_PROBABILITY&roomId=${roomId}&horizon=4h`);
+        if (oRes.ok) {
+          setOccupancyForecast(await oRes.json());
+        }
+      } catch (e) {
+        console.error('Failed to load room predictions', e);
+      }
+    }
+    loadPredictions();
   }, [roomId]);
 
   if (loading || !data) {
@@ -188,6 +218,136 @@ export default function RoomDetailPage() {
           <span className="text-[10px] font-mono text-slate-500">
             Health: {noiseSensor?.health || 'HEALTHY'}
           </span>
+        </Card>
+      </div>
+
+      {/* Phase 3: Predictive Room Micro-Climate & Occupancy Forecast (Next 4h) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Predicted Temperature Trajectory */}
+        <Card className="border-indigo-900/40 bg-slate-900/40">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                <CardTitle className="text-sm text-indigo-300">
+                  Predicted Temperature (Next 4h)
+                </CardTitle>
+              </div>
+              {tempForecast && (
+                <Badge variant="outline" className="text-[10px] text-indigo-400 border-indigo-800">
+                  {tempForecast.model.name}
+                </Badge>
+              )}
+            </div>
+            <span className="text-[10px] font-mono text-slate-500">
+              Autoregressive residual decay relaxing toward diurnal expectation
+            </span>
+          </CardHeader>
+          <div className="h-56 w-full pt-1">
+            {tempForecast?.forecast ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={tempForecast.forecast}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis
+                    dataKey="timestamp"
+                    stroke="#64748b"
+                    fontSize={10}
+                    tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  />
+                  <YAxis stroke="#64748b" fontSize={10} domain={['auto', 'auto']} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0b0f17', borderColor: '#1e293b', fontSize: '11px' }}
+                    formatter={(value: any) => [`${value} °C`, 'Predicted Temp']}
+                    labelFormatter={(lbl) => new Date(lbl).toLocaleTimeString()}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="confidenceInterval80.upper"
+                    stroke="none"
+                    fill="#818cf8"
+                    fillOpacity={0.15}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="confidenceInterval80.lower"
+                    stroke="none"
+                    fill="#090d16"
+                    fillOpacity={0.9}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="predicted"
+                    stroke="#a855f7"
+                    strokeWidth={2}
+                    dot={{ r: 2, fill: '#c084fc' }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs font-mono text-slate-500">
+                Predictive telemetry calculating...
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Predicted Occupancy Probability */}
+        <Card className="border-indigo-900/40 bg-slate-900/40">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-violet-400" />
+                <CardTitle className="text-sm text-indigo-300">
+                  Predicted Occupancy Probability (Next 4h)
+                </CardTitle>
+              </div>
+              {occupancyForecast && (
+                <Badge variant="outline" className="text-[10px] text-violet-400 border-violet-800">
+                  Bayesian Prior
+                </Badge>
+              )}
+            </div>
+            <span className="text-[10px] font-mono text-slate-500">
+              Bernoulli state probability relaxing to historical habit prior
+            </span>
+          </CardHeader>
+          <div className="h-56 w-full pt-1">
+            {occupancyForecast?.forecast ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={occupancyForecast.forecast}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis
+                    dataKey="timestamp"
+                    stroke="#64748b"
+                    fontSize={10}
+                    tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={10}
+                    domain={[0, 1]}
+                    tickFormatter={(v) => `${Math.round(v * 100)}%`}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0b0f17', borderColor: '#1e293b', fontSize: '11px' }}
+                    formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`, 'Occupancy Probability']}
+                    labelFormatter={(lbl) => new Date(lbl).toLocaleTimeString()}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="predicted"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    dot={{ r: 2, fill: '#a78bfa' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs font-mono text-slate-500">
+                Occupancy probability calculating...
+              </div>
+            )}
+          </div>
         </Card>
       </div>
 

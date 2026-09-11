@@ -84,6 +84,23 @@ enum IncidentType {
   MULTI_SENSOR_ANOMALY
 }
 
+enum PredictionTarget {
+  HOUSEHOLD_POWER
+  ROOM_TEMPERATURE
+  ROOM_CO2
+  OCCUPANCY_PROBABILITY
+}
+
+enum ModelType {
+  STATISTICAL_PERSISTENCE
+  STATISTICAL_EMA
+  STATISTICAL_SEASONAL_DECAY
+  BAYESIAN_OCCUPANCY
+  ML_LINEAR_REGRESSION
+  ML_GRADIENT_BOOSTING
+  REMOTE_MICROSERVICE
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -107,6 +124,7 @@ model Home {
   events      Event[]
   insights    Insight[]
   incidents   Incident[]
+  modelEvaluations ModelEvaluation[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -294,4 +312,40 @@ model Incident {
   @@index([homeId, status, createdAt(sort: Desc)])
   @@index([homeId, incidentType, status])
 }
+
+model PredictionModel {
+  id              String           @id @default(cuid())
+  name            String
+  type            ModelType
+  version         String           // e.g. "1.0.0"
+  target          PredictionTarget
+  hyperparameters Json             // e.g. { alpha: 0.2, halfLifeMinutes: 45 }
+  isActive        Boolean          @default(true)
+  isDefault       Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  evaluations     ModelEvaluation[]
+
+  @@index([target, isActive])
+}
+
+model ModelEvaluation {
+  id                 String           @id @default(cuid())
+  modelId            String
+  model              PredictionModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  homeId             String
+  home               Home             @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  target             PredictionTarget
+  evaluationWindow   String           // e.g. "7d", "14d"
+  sampleCount        Int
+  mae                Float
+  rmse               Float
+  horizonMetrics     Json             // { "15m": { mae: 0.12, rmse: 0.18 }, "1h": { ... }, "24h": { ... } }
+  inferenceLatencyMs Float
+  evaluatedAt        DateTime         @default(now())
+
+  @@index([modelId, evaluatedAt(sort: Desc)])
+  @@index([homeId, target, evaluatedAt(sort: Desc)])
+}
+
 

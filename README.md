@@ -8,14 +8,17 @@ A production-grade, TypeScript-first web platform for modeling, monitoring, anal
 
 ## Highlights & System Capabilities
 
-- **Digital Twin Modeling**: Structured relational hierarchy (`Home` $\to$ `Floors` $\to$ `Rooms` $\to$ `Devices` $\to$ `Sensors` $\to$ `Telemetry` $\to$ `Events` $\to$ `Incidents` $\to$ `Insights`).
+- **Digital Twin Modeling**: Structured relational hierarchy (`Home` $\to$ `Floors` $\to$ `Rooms` $\to$ `Devices` $\to$ `Sensors` $\to$ `Telemetry` $\to$ `Events` $\to$ `Incidents` $\to$ `Insights` $\to$ `PredictionModel` $\to$ `ModelEvaluation`).
 - **Strict Producer vs. Consumer Separation**: Built to ingest data from both an integrated thermodynamic physics simulator and external physical microcontrollers (ESP32/ESP8266) over MQTT without altering application logic.
+- **Predictive Home Intelligence (Phase 3)**: Transitions platform from reactive correlation to multi-horizon predictive forecasting (`Observe` $\to$ `Detect` $\to$ `Correlate` $\to$ `Predict`). Predicts `HOUSEHOLD_POWER`, `ROOM_TEMPERATURE`, `ROOM_CO2`, and `OCCUPANCY_PROBABILITY` across $15\text{m}, 1\text{h}, 4\text{h}, 24\text{h}$ horizons.
+- **Deterministic Mathematical Baselines & Pluggable ML**: No LLMs or synthetic heuristics. Implements Seasonal Diurnal with Autoregressive Residual Decay ($\hat{y} = \mu_{d, h} + e^{-\lambda h}(y_0 - \mu_0)$), Naive Persistence, EMA with damped momentum, and Bayesian Occupancy Prior with motion decay. Features pluggable `IPredictionProvider` interface for remote Python ML services (LightGBM/ONNX) with 800ms circuit-breaker fallback.
+- **Rolling-Origin Walk-Forward Backtesting**: Continuous out-of-sample cross-validation evaluating MAE, RMSE, MAPE, inference latency (<10ms SLA), and horizon degradation without lookahead bias. Durable evaluation records persisted to PostgreSQL.
 - **Cross-Sensor Incident Intelligence Engine (Phase 2)**: Correlates temporally synchronized signals across multiple independent physical sensors (Power, Temperature, Humidity, CO₂, PM2.5, Water Flow, Contact) to detect unified household incidents (`COOKING_EVENT`, `WATER_LEAK`, `AC_FAILURE`, `WINDOW_THERMAL_EVENT`) with automated deduplication and auto-cooldown resolution.
-- **Deterministic AI & Explainable Proofs**: Zero LLM hallucination and zero fabricated confidence scores. Uses parametric Gaussian baseline corridors ($\mu \pm 2.5\sigma$) and closed-form multi-sensor corroboration equations ($\text{Confidence} = \min(0.99, \text{RawConfidence} \times \text{CorroborationFactor})$).
+- **Deterministic AI & Explainable Proofs**: Zero LLM hallucination and zero fabricated confidence scores. Uses parametric Gaussian baseline corridors ($\mu \pm 2.5\sigma$) and closed-form multi-sensor corroboration equations.
 - **Interactive 2D Floor Plan Schematic**: Scaled vector representation of household floors with live sensor badges, occupancy indicators, and direct room deep-linking.
-- **Historical Telemetry Analytics**: Multi-timeframe explorer (24h, 7d, 30d) across Power, Temperature, Humidity, CO₂, and Noise with parametric baseline corridor overlays ($\mu \pm 2\sigma$), peak extraction, and distribution percentiles (P10, P50, P90).
+- **Multi-Horizon Forecast & Analytics Overlays**: Time-series charts in `/analytics` and `/rooms/[id]` with empirical baseline corridors, forecast trajectory lines, 80%/95% confidence intervals, model selector, data quality badges, and interactive backtest triggers.
 - **Realtime Event-Driven Architecture**: Server-Sent Events (SSE) stream delivering instantaneous updates, connectivity heartbeat, threshold breaches, statistical anomalies, and multi-sensor incidents.
-- **High-Performance & Rigorously Verified**: 100% test pass rate across 9 unit, integration, and benchmark suites (43 tests), evaluation latency under 5ms (target: <50ms), and 0% false positives.
+- **High-Performance & Rigorously Verified**: 100% test pass rate across 13 unit, integration, and benchmark suites (61 tests), sub-10ms inference and evaluation latency, and 0% false positives.
 - **Production-Ready Stack**: Next.js 15 App Router, React 19, Tailwind CSS, PostgreSQL, Prisma ORM, Zod, and Vitest.
 
 ---
@@ -138,12 +141,14 @@ Run test suites (Vitest):
 ```bash
 npm run test
 ```
-The test suite (28 automated tests across 6 suites) verifies:
-- **Unit Math & Thermodynamics**: Statistical distributions, Z-scores, percentiles, downsampling, linear regression slopes, diurnal cycles, Newton's law of thermal cooling, and CO₂ mass balances.
+The test suite (61 automated tests across 13 test suites) verifies:
+- **Unit Math, Physics & Thermodynamics**: Statistical distributions, Z-scores, percentiles, downsampling, linear regression slopes, diurnal cycles, Newton's law of thermal cooling, and CO₂ mass balances.
+- **Predictive Mathematical Baselines**: Autoregressive residual decay, Naive Persistence expanding uncertainty, EMA damped momentum, Bayesian occupancy prior relaxation, and trigonometric cyclical encodings.
 - **Physical Reality Bounds**: Ingestion validation schemas, PM2.5 boundary checks, and sensor unit mismatch rejection.
 - **Multi-Tenant Security**: HMAC-SHA256 signed session token generation, verification, tampering rejection, and home ownership authorization.
 - **Pipeline Integrity**: Database-level duplicate suppression (`skipDuplicates: true`), out-of-order timestamp regression protection, and inactive sensor timeout transitions.
-- **Intelligence Benchmark**: Controlled evaluation across 7 benchmark scenarios (normal activity, sustained heating, power surges, CO₂ drift, window thermal shock, AC failure, sensor outage).
+- **Cross-Sensor Incident Intelligence Engine**: Controlled benchmark evaluating cooking activity, water leaks, AC failures, window thermal breaches, and 0% false positives under baseline operations.
+- **Predictive Walk-Forward Benchmarks**: Continuous rolling-origin backtesting verifying out-of-sample MAE, RMSE, horizon degradation curves, and database persistence.
 
 ---
 

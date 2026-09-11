@@ -28,14 +28,20 @@ import {
   TrendingDown,
   Activity,
   AlertCircle,
+  Sparkles,
+  Cpu,
+  Clock,
+  ShieldCheck,
+  CheckCircle2,
+  BarChart2,
 } from 'lucide-react';
 
 const metricOptions = [
-  { id: 'POWER', label: 'Active Power', unit: 'W', icon: Zap, color: '#fbbf24' },
-  { id: 'TEMPERATURE', label: 'Temperature', unit: '°C', icon: Thermometer, color: '#38bdf8' },
-  { id: 'HUMIDITY', label: 'Humidity', unit: '%', icon: Droplets, color: '#2dd4bf' },
-  { id: 'CO2', label: 'CO₂ Air Quality', unit: 'ppm', icon: Wind, color: '#34d399' },
-  { id: 'NOISE', label: 'Acoustic Noise', unit: 'dB', icon: Volume2, color: '#f43f5e' },
+  { id: 'POWER', label: 'Active Power', unit: 'W', icon: Zap, color: '#fbbf24', target: 'HOUSEHOLD_POWER' },
+  { id: 'TEMPERATURE', label: 'Temperature', unit: '°C', icon: Thermometer, color: '#38bdf8', target: 'ROOM_TEMPERATURE' },
+  { id: 'HUMIDITY', label: 'Humidity', unit: '%', icon: Droplets, color: '#2dd4bf', target: null },
+  { id: 'CO2', label: 'CO₂ Air Quality', unit: 'ppm', icon: Wind, color: '#34d399', target: 'ROOM_CO2' },
+  { id: 'NOISE', label: 'Acoustic Noise', unit: 'dB', icon: Volume2, color: '#f43f5e', target: null },
 ];
 
 const rangeOptions = [
@@ -44,11 +50,30 @@ const rangeOptions = [
   { id: '30d', label: '30 Days' },
 ];
 
+const forecastHorizons = [
+  { id: '1h', label: '+1 Hour' },
+  { id: '4h', label: '+4 Hours' },
+  { id: '24h', label: '+24 Hours' },
+];
+
 export default function AnalyticsPage() {
   const [metric, setMetric] = useState('POWER');
   const [range, setRange] = useState('24h');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Predictive Intelligence state (Phase 3)
+  const [showForecast, setShowForecast] = useState(true);
+  const [forecastHorizon, setForecastHorizon] = useState('24h');
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [forecastData, setForecastData] = useState<any>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
+  const [evaluationReport, setEvaluationReport] = useState<any>(null);
+
+  const activeMetricMeta = metricOptions.find((m) => m.id === metric)!;
+  const isPredictiveSupported = !!activeMetricMeta.target;
 
   const fetchAnalytics = async () => {
     try {
@@ -64,23 +89,145 @@ export default function AnalyticsPage() {
     }
   };
 
+  const fetchModels = async () => {
+    if (!activeMetricMeta.target) return;
+    try {
+      const res = await fetch(`/api/predictions/models?target=${activeMetricMeta.target}`);
+      if (res.ok) {
+        const json = await res.json();
+        setAvailableModels(json.models || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchForecast = async () => {
+    if (!activeMetricMeta.target || !showForecast) return;
+    try {
+      setForecastLoading(true);
+      let url = `/api/predictions?target=${activeMetricMeta.target}&horizon=${forecastHorizon}`;
+      if (selectedModel) {
+        url += `&modelType=${selectedModel}`;
+      }
+      const res = await fetch(url);
+      if (res.ok) {
+        setForecastData(await res.json());
+      } else {
+        setForecastData(null);
+      }
+    } catch (e) {
+      console.error(e);
+      setForecastData(null);
+    } finally {
+      setForecastLoading(false);
+    }
+  };
+
+  const runBacktest = async () => {
+    if (!activeMetricMeta.target) return;
+    try {
+      setEvaluating(true);
+      const res = await fetch('/api/predictions/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target: activeMetricMeta.target,
+          modelType: selectedModel || undefined,
+          days: 7,
+        }),
+      });
+      if (res.ok) {
+        setEvaluationReport(await res.json());
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setEvaluating(false);
+    }
+  };
+
   useEffect(() => {
     fetchAnalytics();
   }, [metric, range]);
 
-  const activeMetricMeta = metricOptions.find((m) => m.id === metric)!;
+  useEffect(() => {
+    fetchModels();
+    setEvaluationReport(null);
+  }, [metric]);
+
+  useEffect(() => {
+    if (showForecast && isPredictiveSupported) {
+      fetchForecast();
+    }
+  }, [metric, showForecast, forecastHorizon, selectedModel]);
+
   const summary = data?.summary;
   const distribution = data?.distribution;
   const series = data?.series || [];
+
+  // Combine historical series with forecast points for unified visualization
+  const combinedChartData = React.useMemo(() => {
+    if (!showForecast || !forecastData || !forecastData.forecast) {
+      return series.map((s: any) => ({
+        ...s,
+        predicted: undefined,
+        ci80Lower: undefined,
+        ci80Upper: undefined,
+        ci95Lower: undefined,
+        ci95Upper: undefined,
+      }));
+    }
+
+    // Historical points with null forecast values
+    const historicalMapped = series.map((s: any) => ({
+      ...s,
+      predicted: undefined,
+      ci80Lower: undefined,
+      ci80Upper: undefined,
+      ci95Lower: undefined,
+      ci95Upper: undefined,
+    }));
+
+    // Prediction points with null observed values
+    const forecastMapped = forecastData.forecast.map((p: any) => ({
+      timestamp: p.timestamp,
+      value: undefined,
+      baselineMean: undefined,
+      baselineUpper: undefined,
+      baselineLower: undefined,
+      predicted: p.predicted,
+      ci80Lower: p.confidenceInterval80.lower,
+      ci80Upper: p.confidenceInterval80.upper,
+      ci95Lower: p.confidenceInterval95.lower,
+      ci95Upper: p.confidenceInterval95.upper,
+      standardError: p.standardError,
+    }));
+
+    // Bridge the latest historical point to prediction
+    if (historicalMapped.length > 0 && forecastMapped.length > 0) {
+      const lastObs = historicalMapped[historicalMapped.length - 1];
+      lastObs.predicted = lastObs.value;
+      lastObs.ci80Lower = lastObs.value;
+      lastObs.ci80Upper = lastObs.value;
+    }
+
+    return [...historicalMapped, ...forecastMapped];
+  }, [series, forecastData, showForecast]);
 
   return (
     <div className="space-y-6">
       {/* Top Header & Range/Metric Selectors */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">Historical Telemetry Analytics</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-100">Telemetry & Predictive Intelligence</h1>
+            <Badge variant="outline" className="text-xs bg-indigo-950/40 border-indigo-500/40 text-indigo-400">
+              Phase 3 Predictive
+            </Badge>
+          </div>
           <p className="text-xs text-slate-400 font-mono mt-1">
-            Multi-timeframe statistical distributions, peak extraction, and baseline corridor overlays
+            Deterministic baselines, autoregressive residual decay, and multi-horizon forecasts
           </p>
         </div>
 
@@ -120,10 +267,136 @@ export default function AnalyticsPage() {
               <Icon className="w-3.5 h-3.5" style={{ color: opt.color }} />
               <span>{opt.label}</span>
               <span className="text-[10px] text-slate-500">({opt.unit})</span>
+              {opt.target && (
+                <span className="text-[9px] px-1 bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 rounded">
+                  Predict
+                </span>
+              )}
             </button>
           );
         })}
       </div>
+
+      {/* Forecast Controls Bar (When Predictive Target Supported) */}
+      {isPredictiveSupported && (
+        <div className="bg-slate-900/80 border border-indigo-900/40 rounded-lg p-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs font-mono font-semibold text-slate-200">
+                Predictive Forecast Overlay
+              </span>
+            </div>
+
+            <button
+              onClick={() => setShowForecast(!showForecast)}
+              className={`text-xs font-mono px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                showForecast
+                  ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-400'
+              }`}
+            >
+              {showForecast ? 'Forecast ON' : 'Forecast OFF'}
+            </button>
+
+            {showForecast && (
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded p-0.5">
+                {forecastHorizons.map((h) => (
+                  <button
+                    key={h.id}
+                    onClick={() => setForecastHorizon(h.id)}
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded cursor-pointer ${
+                      forecastHorizon === h.id
+                        ? 'bg-indigo-600 text-white font-semibold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {h.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Model Selector Dropdown */}
+            {availableModels.length > 0 && (
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="bg-slate-950 border border-slate-800 text-slate-300 text-xs font-mono rounded px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+              >
+                <option value="">Auto (Default Provider)</option>
+                {availableModels.map((m) => (
+                  <option key={m.id} value={m.type}>
+                    {m.name} ({m.type})
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Backtest Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={runBacktest}
+              disabled={evaluating}
+              className="text-xs font-mono border-indigo-800/60 text-indigo-300 hover:bg-indigo-950/40"
+            >
+              <BarChart2 className="w-3.5 h-3.5 mr-1" />
+              {evaluating ? 'Running 7d Backtest...' : 'Run Backtest'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Model Quality & Active Provider Banner */}
+      {showForecast && forecastData && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="bg-slate-900/60 border border-slate-800 p-2.5 rounded flex items-center justify-between">
+            <span className="text-slate-500">Active Model:</span>
+            <span className="text-indigo-400 font-semibold truncate max-w-[180px]">
+              {forecastData.model.name}
+            </span>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 p-2.5 rounded flex items-center justify-between">
+            <span className="text-slate-500">Data Quality:</span>
+            <Badge
+              variant={
+                forecastData.dataQuality.status === 'HEALTHY'
+                  ? 'success'
+                  : forecastData.dataQuality.status === 'DEGRADED'
+                  ? 'warning'
+                  : 'critical'
+              }
+              className="text-[10px]"
+            >
+              {forecastData.dataQuality.status}
+            </Badge>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 p-2.5 rounded flex items-center justify-between">
+            <span className="text-slate-500">History Span:</span>
+            <span className="text-slate-200">
+              {forecastData.dataQuality.historicalHours} hrs
+            </span>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 p-2.5 rounded flex items-center justify-between">
+            <span className="text-slate-500">Missing Telemetry:</span>
+            <span
+              className={
+                forecastData.dataQuality.missingDataPercent > 10
+                  ? 'text-amber-400'
+                  : 'text-emerald-400'
+              }
+            >
+              {forecastData.dataQuality.missingDataPercent}%
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Statistical Summary KPIs */}
       {summary && (
@@ -190,27 +463,35 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* Main Historical Time-Series Chart */}
+      {/* Main Time-Series & Predictive Forecast Chart */}
       <Card>
         <CardHeader>
-          <div>
-            <CardTitle>
-              {activeMetricMeta.label} ({activeMetricMeta.unit}) — {range.toUpperCase()} Historical Series
-            </CardTitle>
-            <span className="text-[11px] font-mono text-slate-500">
-              Shaded corridor represents ±2σ historical baseline envelope (95.4% confidence interval)
-            </span>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+            <div>
+              <CardTitle>
+                {activeMetricMeta.label} ({activeMetricMeta.unit}) — Time Series & Future Trajectory
+              </CardTitle>
+              <span className="text-[11px] font-mono text-slate-500">
+                Corridor represents empirical baseline & forecast confidence intervals (80% / 95%)
+              </span>
+            </div>
+
+            {forecastLoading && (
+              <span className="text-xs font-mono text-indigo-400 animate-pulse">
+                Computing multi-horizon forecast...
+              </span>
+            )}
           </div>
         </CardHeader>
 
-        <div className="h-80 w-full pt-2">
+        <div className="h-88 w-full pt-2">
           {loading ? (
             <div className="flex items-center justify-center h-full font-mono text-xs text-slate-500">
               Aggregating downsampled series...
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={series}>
+              <ComposedChart data={combinedChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis
                   dataKey="timestamp"
@@ -218,9 +499,7 @@ export default function AnalyticsPage() {
                   fontSize={10}
                   tickFormatter={(val) => {
                     const d = new Date(val);
-                    return range === '24h'
-                      ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      : `${d.getMonth() + 1}/${d.getDate()}`;
+                    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                   }}
                 />
                 <YAxis stroke="#64748b" fontSize={10} domain={['auto', 'auto']} />
@@ -230,13 +509,14 @@ export default function AnalyticsPage() {
                   formatter={(value: any, name: string) => {
                     if (name === 'value') return [`${value} ${activeMetricMeta.unit}`, 'Observed'];
                     if (name === 'baselineMean') return [`${value} ${activeMetricMeta.unit}`, 'Baseline Mean'];
-                    if (name === 'baselineUpper') return [`${value} ${activeMetricMeta.unit}`, 'Upper Corridor (+2σ)'];
-                    if (name === 'baselineLower') return [`${value} ${activeMetricMeta.unit}`, 'Lower Corridor (-2σ)'];
+                    if (name === 'predicted') return [`${value} ${activeMetricMeta.unit}`, 'Predicted Forecast'];
+                    if (name === 'ci80Upper') return [`${value} ${activeMetricMeta.unit}`, 'Upper 80% CI'];
+                    if (name === 'ci80Lower') return [`${value} ${activeMetricMeta.unit}`, 'Lower 80% CI'];
                     return [value, name];
                   }}
                 />
 
-                {/* Shaded Baseline Corridor */}
+                {/* Shaded Historical Baseline Corridor */}
                 <Area
                   type="monotone"
                   dataKey="baselineUpper"
@@ -252,7 +532,23 @@ export default function AnalyticsPage() {
                   fillOpacity={0.9}
                 />
 
-                {/* Baseline Mean Dashed Line */}
+                {/* Forecast Confidence Envelope (80% CI) */}
+                <Area
+                  type="monotone"
+                  dataKey="ci80Upper"
+                  stroke="none"
+                  fill="#818cf8"
+                  fillOpacity={0.15}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="ci80Lower"
+                  stroke="none"
+                  fill="#090d16"
+                  fillOpacity={0.9}
+                />
+
+                {/* Historical Baseline Mean Dashed Line */}
                 <Line
                   type="monotone"
                   dataKey="baselineMean"
@@ -270,13 +566,23 @@ export default function AnalyticsPage() {
                   strokeWidth={2}
                   dot={false}
                 />
+
+                {/* Predicted Future Line */}
+                <Line
+                  type="monotone"
+                  dataKey="predicted"
+                  stroke="#a855f7"
+                  strokeWidth={2.5}
+                  strokeDasharray="5 5"
+                  dot={{ r: 2.5, fill: '#c084fc' }}
+                />
               </ComposedChart>
             </ResponsiveContainer>
           )}
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-6 pt-4 border-t border-slate-800/80 text-xs font-mono text-slate-400">
+        <div className="flex flex-wrap items-center justify-center gap-6 pt-4 border-t border-slate-800/80 text-xs font-mono text-slate-400">
           <div className="flex items-center gap-2">
             <span className="w-3 h-1 rounded-full" style={{ backgroundColor: activeMetricMeta.color }} />
             <span>Observed Telemetry</span>
@@ -285,12 +591,103 @@ export default function AnalyticsPage() {
             <span className="w-3 h-0.5 bg-slate-500 border-b border-dashed border-slate-400" />
             <span>Historical Baseline (μ)</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-sky-500/20 border border-sky-500/40 rounded-xs" />
-            <span>±2σ Normal Envelope</span>
-          </div>
+          {showForecast && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-0.5 bg-purple-500 border-b border-dashed border-purple-400" />
+                <span className="text-purple-400 font-semibold">Predicted Trajectory (ŷ)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-indigo-500/30 border border-indigo-500/50 rounded-xs" />
+                <span>Forecast Confidence Band (80%)</span>
+              </div>
+            </>
+          )}
         </div>
       </Card>
+
+      {/* Continuous Evaluation / Backtest Results Modal/Panel */}
+      {evaluationReport && (
+        <Card className="border-indigo-900/60 bg-slate-900/40">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-indigo-300 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                  Rolling-Origin Walk-Forward Backtest Report
+                </CardTitle>
+                <span className="text-xs font-mono text-slate-400">
+                  Model: {evaluationReport.modelName} ({evaluationReport.modelType})
+                </span>
+              </div>
+              <Badge variant="outline" className="text-xs text-indigo-300 border-indigo-800">
+                Latency: {evaluationReport.inferenceLatencyMs}ms
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <div className="p-4 pt-0 space-y-4">
+            {/* Overall Accuracy KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
+              <div className="bg-slate-950 p-3 rounded border border-slate-800">
+                <span className="text-slate-500 block text-[10px]">Overall MAE</span>
+                <span className="text-emerald-400 font-bold text-base">
+                  {evaluationReport.overallMae} {activeMetricMeta.unit}
+                </span>
+              </div>
+              <div className="bg-slate-950 p-3 rounded border border-slate-800">
+                <span className="text-slate-500 block text-[10px]">Overall RMSE</span>
+                <span className="text-sky-400 font-bold text-base">
+                  {evaluationReport.overallRmse} {activeMetricMeta.unit}
+                </span>
+              </div>
+              <div className="bg-slate-950 p-3 rounded border border-slate-800">
+                <span className="text-slate-500 block text-[10px]">Overall MAPE</span>
+                <span className="text-amber-400 font-bold text-base">
+                  {evaluationReport.overallMape ? `${evaluationReport.overallMape}%` : 'N/A'}
+                </span>
+              </div>
+              <div className="bg-slate-950 p-3 rounded border border-slate-800">
+                <span className="text-slate-500 block text-[10px]">Inference SLA</span>
+                <span className="text-indigo-400 font-bold text-base">
+                  {evaluationReport.inferenceLatencyMs} ms (&lt; 10ms target)
+                </span>
+              </div>
+            </div>
+
+            {/* Horizon Degradation Table */}
+            <div>
+              <span className="text-xs font-mono text-slate-400 block mb-2 font-semibold">
+                Accuracy Degradation Across Forecast Horizons:
+              </span>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs font-mono text-left border border-slate-800">
+                  <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th className="p-2">Horizon</th>
+                      <th className="p-2">MAE ({activeMetricMeta.unit})</th>
+                      <th className="p-2">RMSE ({activeMetricMeta.unit})</th>
+                      <th className="p-2">MAPE (%)</th>
+                      <th className="p-2">Sample Count</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 bg-slate-900/60">
+                    {evaluationReport.horizonMetrics.map((hm: any) => (
+                      <tr key={hm.horizonMinutes} className="hover:bg-slate-800/40">
+                        <td className="p-2 font-bold text-slate-200">{hm.horizonLabel}</td>
+                        <td className="p-2 text-emerald-400">{hm.mae}</td>
+                        <td className="p-2 text-sky-400">{hm.rmse}</td>
+                        <td className="p-2 text-amber-400">{hm.mape ? `${hm.mape}%` : '—'}</td>
+                        <td className="p-2 text-slate-400">{hm.sampleCount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Percentiles & Distribution Table */}
       {distribution && (

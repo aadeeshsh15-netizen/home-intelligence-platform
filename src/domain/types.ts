@@ -8,6 +8,8 @@ import {
   InsightType,
   IncidentStatus,
   IncidentType,
+  PredictionTarget,
+  ModelType,
 } from '@prisma/client';
 
 export type {
@@ -20,6 +22,8 @@ export type {
   InsightType,
   IncidentStatus,
   IncidentType,
+  PredictionTarget,
+  ModelType,
 };
 
 export interface RoomWithSensors {
@@ -158,4 +162,79 @@ export interface IncidentSummary {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ForecastHorizon = '15m' | '1h' | '4h' | '24h';
+
+export interface PredictionPoint {
+  timestamp: string;
+  horizonMinutes: number;
+  predicted: number;
+  confidenceInterval80: {
+    lower: number;
+    upper: number;
+  };
+  confidenceInterval95: {
+    lower: number;
+    upper: number;
+  };
+  standardError: number;
+}
+
+export interface PredictionResponse {
+  target: PredictionTarget;
+  roomId?: string | null;
+  roomName?: string | null;
+  unit: string;
+  currentObserved: {
+    value: number;
+    timestamp: string;
+  } | null;
+  model: {
+    id: string;
+    name: string;
+    type: ModelType;
+    version: string;
+  };
+  dataQuality: {
+    status: 'HEALTHY' | 'DEGRADED' | 'INSUFFICIENT_DATA';
+    historicalHours: number;
+    missingDataPercent: number;
+  };
+  forecast: PredictionPoint[];
+  generatedAt: string;
+}
+
+export interface ModelMetadata {
+  id: string;
+  name: string;
+  type: ModelType;
+  version: string;
+  target: PredictionTarget;
+  hyperparameters: Record<string, any>;
+  isActive: boolean;
+  isDefault: boolean;
+}
+
+export interface HorizonEvaluationMetric {
+  horizonMinutes: number;
+  horizonLabel: string;
+  mae: number;
+  rmse: number;
+  mape?: number;
+  sampleCount: number;
+}
+
+export interface EvaluationReport {
+  modelId: string;
+  modelName: string;
+  modelType: ModelType;
+  target: PredictionTarget;
+  overallMae: number;
+  overallRmse: number;
+  overallMape?: number;
+  inferenceLatencyMs: number;
+  evaluatedAt: string;
+  horizonMetrics: HorizonEvaluationMetric[];
+}
+
 

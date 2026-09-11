@@ -1,0 +1,674 @@
+{
+  "results": [
+    {
+      "target": "HOUSEHOLD_POWER",
+      "providerType": "STATISTICAL_PERSISTENCE",
+      "providerName": "Naive Persistence Baseline",
+      "overallMae": 27.937,
+      "overallRmse": 87.888,
+      "overallMape": 2.77,
+      "avgLatencyMs": 8.22,
+      "totalSamples": 661,
+      "coverage80": 79.7,
+      "coverage95": 86.2,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 1.34,
+          "rmse": 1.631,
+          "mape": 0.14,
+          "sampleCount": 166,
+          "coverage80": 76.5,
+          "coverage95": 88.6
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 2.651,
+          "rmse": 3.262,
+          "mape": 0.29,
+          "sampleCount": 166,
+          "coverage80": 78.3,
+          "coverage95": 91.6
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 102.789,
+          "rmse": 173.917,
+          "mape": 10.17,
+          "sampleCount": 166,
+          "coverage80": 65.1,
+          "coverage95": 65.7
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 4.546,
+          "rmse": 22.501,
+          "mape": 0.45,
+          "sampleCount": 163,
+          "coverage80": 99.4,
+          "coverage95": 99.4
+        }
+      ]
+    },
+    {
+      "target": "HOUSEHOLD_POWER",
+      "providerType": "STATISTICAL_EMA",
+      "providerName": "Exponential Moving Average with Momentum",
+      "overallMae": 28.086,
+      "overallRmse": 87.893,
+      "overallMape": 2.79,
+      "avgLatencyMs": 7.45,
+      "totalSamples": 661,
+      "coverage80": 73.7,
+      "coverage95": 85.5,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 1.605,
+          "rmse": 1.934,
+          "mape": 0.17,
+          "sampleCount": 166,
+          "coverage80": 77.7,
+          "coverage95": 91.6
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 2.974,
+          "rmse": 3.585,
+          "mape": 0.32,
+          "sampleCount": 166,
+          "coverage80": 60.2,
+          "coverage95": 86.1
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 102.793,
+          "rmse": 173.917,
+          "mape": 10.17,
+          "sampleCount": 166,
+          "coverage80": 59,
+          "coverage95": 65.1
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 4.546,
+          "rmse": 22.501,
+          "mape": 0.45,
+          "sampleCount": 163,
+          "coverage80": 98.2,
+          "coverage95": 99.4
+        }
+      ]
+    },
+    {
+      "target": "HOUSEHOLD_POWER",
+      "providerType": "STATISTICAL_SEASONAL_DECAY",
+      "providerName": "Seasonal Diurnal with Autoregressive Residual Decay",
+      "overallMae": 2.011,
+      "overallRmse": 11.226,
+      "overallMape": 0.21,
+      "avgLatencyMs": 7.8,
+      "totalSamples": 661,
+      "coverage80": 82.8,
+      "coverage95": 98.3,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 1.139,
+          "rmse": 1.303,
+          "mape": 0.12,
+          "sampleCount": 166,
+          "coverage80": 91.6,
+          "coverage95": 98.8
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 1.715,
+          "rmse": 2.052,
+          "mape": 0.18,
+          "sampleCount": 166,
+          "coverage80": 81.3,
+          "coverage95": 97
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 1.767,
+          "rmse": 2.101,
+          "mape": 0.19,
+          "sampleCount": 166,
+          "coverage80": 78.3,
+          "coverage95": 98.8
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 3.448,
+          "rmse": 22.373,
+          "mape": 0.33,
+          "sampleCount": 163,
+          "coverage80": 79.8,
+          "coverage95": 98.8
+        }
+      ]
+    },
+    {
+      "target": "ROOM_TEMPERATURE",
+      "providerType": "STATISTICAL_PERSISTENCE",
+      "providerName": "Naive Persistence Baseline",
+      "overallMae": 0.103,
+      "overallRmse": 0.17,
+      "overallMape": 0.48,
+      "avgLatencyMs": 7.96,
+      "totalSamples": 661,
+      "coverage80": 94.9,
+      "coverage95": 97.6,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 0.038,
+          "rmse": 0.05,
+          "mape": 0.18,
+          "sampleCount": 166,
+          "coverage80": 98.8,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 0.115,
+          "rmse": 0.182,
+          "mape": 0.53,
+          "sampleCount": 166,
+          "coverage80": 83.7,
+          "coverage95": 90.4
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 0.203,
+          "rmse": 0.272,
+          "mape": 0.95,
+          "sampleCount": 166,
+          "coverage80": 97,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 0.057,
+          "rmse": 0.072,
+          "mape": 0.27,
+          "sampleCount": 163,
+          "coverage80": 100,
+          "coverage95": 100
+        }
+      ]
+    },
+    {
+      "target": "ROOM_TEMPERATURE",
+      "providerType": "STATISTICAL_EMA",
+      "providerName": "Exponential Moving Average with Momentum",
+      "overallMae": 0.103,
+      "overallRmse": 0.169,
+      "overallMape": 0.48,
+      "avgLatencyMs": 7.97,
+      "totalSamples": 661,
+      "coverage80": 89.9,
+      "coverage95": 96.7,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 0.039,
+          "rmse": 0.049,
+          "mape": 0.18,
+          "sampleCount": 166,
+          "coverage80": 100,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 0.111,
+          "rmse": 0.177,
+          "mape": 0.52,
+          "sampleCount": 166,
+          "coverage80": 83.7,
+          "coverage95": 86.7
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 0.203,
+          "rmse": 0.272,
+          "mape": 0.95,
+          "sampleCount": 166,
+          "coverage80": 75.9,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 0.057,
+          "rmse": 0.072,
+          "mape": 0.27,
+          "sampleCount": 163,
+          "coverage80": 100,
+          "coverage95": 100
+        }
+      ]
+    },
+    {
+      "target": "ROOM_TEMPERATURE",
+      "providerType": "STATISTICAL_SEASONAL_DECAY",
+      "providerName": "Seasonal Diurnal with Autoregressive Residual Decay",
+      "overallMae": 0.047,
+      "overallRmse": 0.066,
+      "overallMape": 0.22,
+      "avgLatencyMs": 7.89,
+      "totalSamples": 661,
+      "coverage80": 96.7,
+      "coverage95": 99.8,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 0.039,
+          "rmse": 0.052,
+          "mape": 0.18,
+          "sampleCount": 166,
+          "coverage80": 98.8,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 0.054,
+          "rmse": 0.072,
+          "mape": 0.25,
+          "sampleCount": 166,
+          "coverage80": 95.2,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 0.048,
+          "rmse": 0.068,
+          "mape": 0.22,
+          "sampleCount": 166,
+          "coverage80": 95.2,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 0.047,
+          "rmse": 0.069,
+          "mape": 0.22,
+          "sampleCount": 163,
+          "coverage80": 97.5,
+          "coverage95": 99.4
+        }
+      ]
+    },
+    {
+      "target": "ROOM_CO2",
+      "providerType": "STATISTICAL_PERSISTENCE",
+      "providerName": "Naive Persistence Baseline",
+      "overallMae": 76.312,
+      "overallRmse": 255.471,
+      "overallMape": 11.8,
+      "avgLatencyMs": 7.73,
+      "totalSamples": 648,
+      "coverage80": 82.7,
+      "coverage95": 86.9,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 1.722,
+          "rmse": 3.017,
+          "mape": 0.35,
+          "sampleCount": 162,
+          "coverage80": 84,
+          "coverage95": 93.2
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 4.326,
+          "rmse": 7.7,
+          "mape": 0.9,
+          "sampleCount": 162,
+          "coverage80": 81.5,
+          "coverage95": 88.3
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 298.491,
+          "rmse": 510.874,
+          "mape": 45.8,
+          "sampleCount": 162,
+          "coverage80": 66,
+          "coverage95": 66
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 0.71,
+          "rmse": 0.856,
+          "mape": 0.15,
+          "sampleCount": 162,
+          "coverage80": 99.4,
+          "coverage95": 100
+        }
+      ]
+    },
+    {
+      "target": "ROOM_CO2",
+      "providerType": "STATISTICAL_EMA",
+      "providerName": "Exponential Moving Average with Momentum",
+      "overallMae": 77.652,
+      "overallRmse": 255.579,
+      "overallMape": 12.07,
+      "avgLatencyMs": 8.16,
+      "totalSamples": 648,
+      "coverage80": 80.2,
+      "coverage95": 86.9,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 6.632,
+          "rmse": 12.699,
+          "mape": 1.33,
+          "sampleCount": 162,
+          "coverage80": 86.4,
+          "coverage95": 95.7
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 4.858,
+          "rmse": 8.651,
+          "mape": 1.01,
+          "sampleCount": 162,
+          "coverage80": 72.8,
+          "coverage95": 86.4
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 298.408,
+          "rmse": 510.926,
+          "mape": 45.78,
+          "sampleCount": 162,
+          "coverage80": 62.3,
+          "coverage95": 66
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 0.71,
+          "rmse": 0.856,
+          "mape": 0.15,
+          "sampleCount": 162,
+          "coverage80": 99.4,
+          "coverage95": 99.4
+        }
+      ]
+    },
+    {
+      "target": "ROOM_CO2",
+      "providerType": "STATISTICAL_SEASONAL_DECAY",
+      "providerName": "Seasonal Diurnal with Autoregressive Residual Decay",
+      "overallMae": 4.101,
+      "overallRmse": 8.28,
+      "overallMape": 0.83,
+      "avgLatencyMs": 7.56,
+      "totalSamples": 648,
+      "coverage80": 85.2,
+      "coverage95": 98.5,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 2.821,
+          "rmse": 5.228,
+          "mape": 0.57,
+          "sampleCount": 162,
+          "coverage80": 93.2,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 2.081,
+          "rmse": 3.485,
+          "mape": 0.44,
+          "sampleCount": 162,
+          "coverage80": 73.5,
+          "coverage95": 95.1
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 5.784,
+          "rmse": 10.869,
+          "mape": 1.15,
+          "sampleCount": 162,
+          "coverage80": 88.3,
+          "coverage95": 99.4
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 5.717,
+          "rmse": 10.801,
+          "mape": 1.14,
+          "sampleCount": 162,
+          "coverage80": 85.8,
+          "coverage95": 99.4
+        }
+      ]
+    },
+    {
+      "target": "OCCUPANCY_PROBABILITY",
+      "providerType": "STATISTICAL_PERSISTENCE",
+      "providerName": "Naive Persistence Baseline",
+      "overallMae": 0.086,
+      "overallRmse": 0.293,
+      "avgLatencyMs": 7.65,
+      "totalSamples": 661,
+      "coverage80": 91.5,
+      "coverage95": 91.5,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 0,
+          "rmse": 0,
+          "sampleCount": 166,
+          "coverage80": 100,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 0,
+          "rmse": 0,
+          "sampleCount": 166,
+          "coverage80": 100,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 0.337,
+          "rmse": 0.581,
+          "sampleCount": 166,
+          "coverage80": 66.3,
+          "coverage95": 66.3
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 0.005,
+          "rmse": 0.061,
+          "sampleCount": 163,
+          "coverage80": 100,
+          "coverage95": 100
+        }
+      ]
+    },
+    {
+      "target": "OCCUPANCY_PROBABILITY",
+      "providerType": "BAYESIAN_OCCUPANCY",
+      "providerName": "Bayesian Occupancy Prior with Motion Decay",
+      "overallMae": 0.043,
+      "overallRmse": 0.052,
+      "avgLatencyMs": 7.21,
+      "totalSamples": 661,
+      "coverage80": 99.8,
+      "coverage95": 99.8,
+      "horizonMetrics": [
+        {
+          "horizonMinutes": 15,
+          "horizonLabel": "15m",
+          "mae": 0.023,
+          "rmse": 0.024,
+          "sampleCount": 166,
+          "coverage80": 100,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 60,
+          "horizonLabel": "1h",
+          "mae": 0.045,
+          "rmse": 0.046,
+          "sampleCount": 166,
+          "coverage80": 100,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 240,
+          "horizonLabel": "4h",
+          "mae": 0.05,
+          "rmse": 0.05,
+          "sampleCount": 166,
+          "coverage80": 100,
+          "coverage95": 100
+        },
+        {
+          "horizonMinutes": 1440,
+          "horizonLabel": "24h",
+          "mae": 0.054,
+          "rmse": 0.076,
+          "sampleCount": 163,
+          "coverage80": 99.4,
+          "coverage95": 99.4
+        }
+      ]
+    }
+  ],
+  "coldStartFindings": [
+    {
+      "target": "HOUSEHOLD_POWER",
+      "originTime": "2026-08-12T03:34:45.957Z",
+      "historicalHours": 12,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 25
+    },
+    {
+      "target": "HOUSEHOLD_POWER",
+      "originTime": "2026-08-12T15:34:45.957Z",
+      "historicalHours": 24,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 49
+    },
+    {
+      "target": "HOUSEHOLD_POWER",
+      "originTime": "2026-08-13T03:34:45.957Z",
+      "historicalHours": 36,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 73
+    },
+    {
+      "target": "ROOM_TEMPERATURE",
+      "originTime": "2026-08-12T03:34:45.957Z",
+      "historicalHours": 12,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 25
+    },
+    {
+      "target": "ROOM_TEMPERATURE",
+      "originTime": "2026-08-12T15:34:45.957Z",
+      "historicalHours": 24,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 49
+    },
+    {
+      "target": "ROOM_TEMPERATURE",
+      "originTime": "2026-08-13T03:34:45.957Z",
+      "historicalHours": 36,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 73
+    },
+    {
+      "target": "ROOM_CO2",
+      "originTime": "2026-08-12T03:34:45.957Z",
+      "historicalHours": 12,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 25
+    },
+    {
+      "target": "ROOM_CO2",
+      "originTime": "2026-08-12T15:34:45.957Z",
+      "historicalHours": 24,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 49
+    },
+    {
+      "target": "ROOM_CO2",
+      "originTime": "2026-08-13T03:34:45.957Z",
+      "historicalHours": 36,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 73
+    },
+    {
+      "target": "OCCUPANCY_PROBABILITY",
+      "originTime": "2026-08-12T03:34:45.957Z",
+      "historicalHours": 12,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 25
+    },
+    {
+      "target": "OCCUPANCY_PROBABILITY",
+      "originTime": "2026-08-12T15:34:45.957Z",
+      "historicalHours": 24,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 49
+    },
+    {
+      "target": "OCCUPANCY_PROBABILITY",
+      "originTime": "2026-08-13T03:34:45.957Z",
+      "historicalHours": 36,
+      "status": "INSUFFICIENT_DATA",
+      "samplesCount": 73
+    }
+  ]
+}
