@@ -49,3 +49,16 @@ export function CardTitle({
     </h3>
   );
 }
+
+export function CardContent({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={twMerge('pt-0', className)} {...props}>
+      {children}
+    </div>
+  );
+}
+

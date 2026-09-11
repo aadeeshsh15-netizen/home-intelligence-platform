@@ -14,15 +14,21 @@ import {
   FlaskConical,
   Activity,
   Sliders,
+  Gauge,
+  Network,
+  PlayCircle,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, exact: true },
+  { name: 'Observability', href: '/observability', icon: Gauge },
+  { name: 'Automations', href: '/automations', icon: Sliders },
+  { name: 'Architecture', href: '/architecture', icon: Network },
+  { name: 'Demo Console', href: '/demo', icon: PlayCircle },
+  { name: 'Devices', href: '/devices', icon: Cpu },
   { name: 'Home View', href: '/home-view', icon: Home },
   { name: 'Rooms', href: '/rooms', icon: DoorOpen },
-  { name: 'Devices', href: '/devices', icon: Cpu },
-  { name: 'Automations', href: '/automations', icon: Sliders },
   { name: 'Historical Analytics', href: '/analytics', icon: LineChart },
   { name: 'Event Stream', href: '/events', icon: BellRing },
   { name: 'AI Insights', href: '/insights', icon: Lightbulb },
