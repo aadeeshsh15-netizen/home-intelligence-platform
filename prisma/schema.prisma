@@ -84,6 +84,27 @@ enum IncidentType {
   MULTI_SENSOR_ANOMALY
 }
 
+enum PredictiveIncidentStatus {
+  PREDICTED
+  CONFIRMED
+  EXPIRED
+  DISMISSED
+}
+
+enum PredictionOutcome {
+  TRUE_POSITIVE
+  FALSE_POSITIVE
+  UNRESOLVED
+}
+
+enum PredictiveIncidentType {
+  PREDICTED_CO2_VENTILATION
+  PREDICTED_AC_FAILURE
+  PREDICTED_ENERGY_SURGE
+  PREDICTED_THERMAL_BREACH
+}
+
+
 enum PredictionTarget {
   HOUSEHOLD_POWER
   ROOM_TEMPERATURE
@@ -125,6 +146,7 @@ model Home {
   events      Event[]
   insights    Insight[]
   incidents   Incident[]
+  predictiveIncidents PredictiveIncident[]
   modelEvaluations ModelEvaluation[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -157,6 +179,7 @@ model Room {
   events      Event[]
   insights    Insight[]
   incidents   Incident[]
+  predictiveIncidents PredictiveIncident[]
   createdAt   DateTime   @default(now())
 }
 
@@ -307,11 +330,62 @@ model Incident {
   lastEvidenceAt      DateTime       @default(now())
   evidence            Json           // ContributingSensorEvidence[]: values, baselines, deltas, weights
   auditPayload        Json?          // Audit metrics: { ruleId, distinctSensorCount, rawConfidence, corroborationFactor }
+  predictiveIncident  PredictiveIncident?
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 
   @@index([homeId, status, createdAt(sort: Desc)])
   @@index([homeId, incidentType, status])
+}
+
+model PredictiveIncident {
+  id                    String                   @id @default(cuid())
+  homeId                String
+  home                  Home                     @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  roomId                String?
+  room                  Room?                    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  type                  PredictiveIncidentType
+  target                PredictionTarget
+  status                PredictiveIncidentStatus @default(PREDICTED)
+  outcome               PredictionOutcome        @default(UNRESOLVED)
+  severity              SeverityLevel            @default(WARNING)
+
+  title                 String
+  summary               String
+  explanation           String
+
+  probability           Float                    // Mathematically derived threshold-crossing probability [0.0 - 1.0]
+  confidence            Float                    // Corroboration & model confidence [0.0 - 1.0]
+
+  horizonMinutes        Int                      // Evaluation horizon (e.g. 15, 30, 60, 240)
+  currentValue          Float
+  predictedValue        Float
+  thresholdValue        Float
+  baselineValue         Float
+
+  confidenceInterval80  Json?                    // { lower: number, upper: number }
+  confidenceInterval95  Json?                    // { lower: number, upper: number }
+
+  modelType             ModelType
+  modelName             String
+
+  expectedCrossingTime  DateTime?
+  predictedLeadTimeMin  Float?
+
+  actualCrossingTime    DateTime?
+  actualLeadTimeMin     Float?
+
+  contributingEvidence  Json                     // Contributing sensor evidence & signals
+
+  confirmedIncidentId   String?                  @unique
+  confirmedIncident     Incident?                @relation(fields: [confirmedIncidentId], references: [id], onDelete: SetNull)
+
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  evaluatedAt           DateTime?
+
+  @@index([homeId, status, createdAt(sort: Desc)])
+  @@index([homeId, type, status])
 }
 
 model PredictionModel {

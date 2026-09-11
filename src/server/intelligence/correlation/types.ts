@@ -31,9 +31,10 @@ export interface CorrelationRule {
   minimumConfidenceThreshold: number;
   signals: CorrelationSignalCondition[];
   evaluateContext(context: {
-    room: { id: string; name: string };
+    room: { id: string; name: string; roomType?: string };
     signalsSatisfied: ContributingSensorEvidence[];
     allEvidence: ContributingSensorEvidence[];
+    allSignals?: any;
     windowSeconds: number;
   }): {
     title: string;

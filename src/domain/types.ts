@@ -10,6 +10,9 @@ import {
   IncidentType,
   PredictionTarget,
   ModelType,
+  PredictiveIncidentStatus,
+  PredictionOutcome,
+  PredictiveIncidentType,
 } from '@prisma/client';
 
 export type {
@@ -24,6 +27,9 @@ export type {
   IncidentType,
   PredictionTarget,
   ModelType,
+  PredictiveIncidentStatus,
+  PredictionOutcome,
+  PredictiveIncidentType,
 };
 
 export interface RoomWithSensors {
@@ -129,7 +135,20 @@ export interface ContributingSensorEvidence {
   sensorId: string;
   sensorType: SensorType;
   roomName: string;
-  signalType: 'ANOMALY_ZSCORE' | 'THRESHOLD_BREACH' | 'STATE_MATCH' | 'RATE_OF_CHANGE' | 'INACTIVITY';
+  signalType:
+    | 'ANOMALY_ZSCORE'
+    | 'THRESHOLD_BREACH'
+    | 'STATE_MATCH'
+    | 'RATE_OF_CHANGE'
+    | 'INACTIVITY'
+    | 'VALUE_GT'
+    | 'VALUE_LT'
+    | 'VALUE_EQ'
+    | 'RATE_OF_CHANGE_GT'
+    | 'RATE_OF_CHANGE_LT'
+    | 'Z_SCORE_GT'
+    | 'Z_SCORE_LT'
+    | string;
   observedValue: number;
   unit: string;
   referenceValue?: number;
@@ -138,7 +157,7 @@ export interface ContributingSensorEvidence {
   weight: number;
   satisfied: boolean;
   timestamp: string;
-  explanation: string;
+  explanation?: string;
 }
 
 export interface IncidentSummary {
@@ -235,6 +254,55 @@ export interface EvaluationReport {
   inferenceLatencyMs: number;
   evaluatedAt: string;
   horizonMetrics: HorizonEvaluationMetric[];
+}
+
+export interface PredictiveIncidentEntity {
+  id: string;
+  homeId: string;
+  roomId: string | null;
+  roomName?: string;
+  type: PredictiveIncidentType;
+  target: PredictionTarget;
+  status: PredictiveIncidentStatus;
+  outcome: PredictionOutcome;
+  severity: SeverityLevel;
+  title: string;
+  summary: string;
+  explanation: string;
+  probability: number;
+  confidence: number;
+  horizonMinutes: number;
+  currentValue: number;
+  predictedValue: number;
+  thresholdValue: number;
+  baselineValue: number;
+  confidenceInterval80?: { lower: number; upper: number } | null;
+  confidenceInterval95?: { lower: number; upper: number } | null;
+  modelType: ModelType;
+  modelName: string;
+  expectedCrossingTime: string | null;
+  predictedLeadTimeMin: number | null;
+  actualCrossingTime: string | null;
+  actualLeadTimeMin: number | null;
+  contributingEvidence: any;
+  confirmedIncidentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  evaluatedAt: string | null;
+}
+
+export interface PredictivePerformanceMetrics {
+  totalWarnings: number;
+  confirmedTruePositives: number;
+  expiredFalsePositives: number;
+  unresolvedPending: number;
+  precisionPercent: number;
+  falsePositiveRatePercent: number;
+  averageLeadTimeMinutes: number;
+  leadTimeBuckets: {
+    bucket: string; // "0-15m", "15-30m", "30-60m", "60m+"
+    count: number;
+  }[];
 }
 
 

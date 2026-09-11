@@ -3,6 +3,7 @@ import { IngestTelemetryPayload, validatePhysicalBounds, validateSensorUnit } fr
 import { evaluateSensorRules, systemEventsBus } from '../event-engine/rules';
 import { evaluateTelemetryAnomaly } from '../intelligence/anomaly';
 import { CrossSensorCorrelationEngine } from '../intelligence/correlation/engine';
+import { PredictiveIncidentEngine } from '../intelligence/predictive-incidents/engine';
 import { SensorHealth, DeviceStatus, InsightType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
@@ -207,6 +208,11 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
   // 7. Evaluate Cross-Sensor Incident Intelligence Engine
   for (const homeId of affectedHomeIds) {
     await CrossSensorCorrelationEngine.processIngestedBatch(homeId, new Date());
+  }
+
+  // 8. Evaluate Predictive Incident Intelligence Engine
+  for (const homeId of affectedHomeIds) {
+    await PredictiveIncidentEngine.processIngestedBatch(homeId, new Date());
   }
 
   return summary;
