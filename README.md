@@ -1,230 +1,218 @@
 # Home Intelligence Platform
 
-A production-grade, TypeScript-first web platform for modeling, monitoring, analyzing, and detecting anomalies across household environments, connected devices, and telemetry sensors.
+A production-grade, TypeScript-first digital twin, predictive intelligence, and closed-loop automation platform for residential environments, connected IoT devices, and multi-modal sensor telemetry.
 
 > **"Understand the home, not merely control it."**
+> Standard smart home platforms operate merely as remote-control switches. This platform models the home as an interconnected thermodynamic, aerodynamic, electrical, and human-inhabited system. It closes the operational loop from physical sensing to deterministic machine learning, predictive anticipation, fail-closed safety guardrails, low-voltage actuation, empirical verification, and causal observability.
 
 ---
 
-## Highlights & System Capabilities
+## The 12-Stage Closed-Loop Control Architecture
 
-- **Digital Twin Modeling**: Structured relational hierarchy (`Home` $\to$ `Floors` $\to$ `Rooms` $\to$ `Devices` $\to$ `Sensors` $\to$ `Telemetry` $\to$ `Events` $\to$ `Incidents` $\to$ `Insights` $\to$ `PredictionModel` $\to$ `ModelEvaluation`).
-- **Strict Producer vs. Consumer Separation**: Built to ingest data from both an integrated thermodynamic physics simulator and external physical microcontrollers (ESP32/ESP8266) over MQTT without altering application logic.
-- **Predictive Home Intelligence (Phase 3)**: Transitions platform from reactive correlation to multi-horizon predictive forecasting (`Observe` $\to$ `Detect` $\to$ `Correlate` $\to$ `Predict`). Predicts `HOUSEHOLD_POWER`, `ROOM_TEMPERATURE`, `ROOM_CO2`, and `OCCUPANCY_PROBABILITY` across $15\text{m}, 1\text{h}, 4\text{h}, 24\text{h}$ horizons.
-- **Deterministic Mathematical Baselines & Pluggable ML**: No LLMs or synthetic heuristics. Implements Seasonal Diurnal with Autoregressive Residual Decay ($\hat{y} = \mu_{d, h} + e^{-\lambda h}(y_0 - \mu_0)$), Naive Persistence, EMA with damped momentum, and Bayesian Occupancy Prior with motion decay. Features pluggable `IPredictionProvider` interface for remote Python ML services (LightGBM/ONNX) with 800ms circuit-breaker fallback.
-- **Rolling-Origin Walk-Forward Backtesting**: Continuous out-of-sample cross-validation evaluating MAE, RMSE, MAPE, inference latency (<10ms SLA), and horizon degradation without lookahead bias. Durable evaluation records persisted to PostgreSQL.
-- **Cross-Sensor Incident Intelligence Engine (Phase 2)**: Correlates temporally synchronized signals across multiple independent physical sensors (Power, Temperature, Humidity, CO₂, PM2.5, Water Flow, Contact) to detect unified household incidents (`COOKING_EVENT`, `WATER_LEAK`, `AC_FAILURE`, `WINDOW_THERMAL_EVENT`) with automated deduplication and auto-cooldown resolution.
-- **Deterministic AI & Explainable Proofs**: Zero LLM hallucination and zero fabricated confidence scores. Uses parametric Gaussian baseline corridors ($\mu \pm 2.5\sigma$) and closed-form multi-sensor corroboration equations.
-- **Interactive 2D Floor Plan Schematic**: Scaled vector representation of household floors with live sensor badges, occupancy indicators, and direct room deep-linking.
-- **Multi-Horizon Forecast & Analytics Overlays**: Time-series charts in `/analytics` and `/rooms/[id]` with empirical baseline corridors, forecast trajectory lines, 80%/95% confidence intervals, model selector, data quality badges, and interactive backtest triggers.
-- **Realtime Event-Driven Architecture**: Server-Sent Events (SSE) stream delivering instantaneous updates, connectivity heartbeat, threshold breaches, statistical anomalies, and multi-sensor incidents.
-- **Closed-Loop Intelligent Automation (Phase 7)**: Closes the operational loop from passive anticipation to verified physical actuation ($\text{Sense} \to \text{Detect} \to \text{Correlate} \to \text{Predict} \to \text{Anticipate} \to \text{Decide} \to \text{Act} \to \text{Verify}$). Decouples predictive forecasts from actuation with a fail-closed safety evaluator, low-voltage control policies, idempotent command dispatcher, and empirical post-actuation verification.
-- **High-Performance & Rigorously Verified**: 100% test pass rate across 29 unit, integration, and benchmark suites (136 tests), sub-150ms actuation latency, and 0% false positives.
-- **Production-Ready Stack**: Next.js 15 App Router, React 19, Tailwind CSS, PostgreSQL, Prisma ORM, Zod, and Vitest.
+The platform executes a continuous, autonomous operational loop across 12 discrete engineering stages:
 
----
+$$\mathbf{Sense \longrightarrow Ingest \longrightarrow Validate \longrightarrow Detect \longrightarrow Correlate \longrightarrow Predict \longrightarrow Anticipate \longrightarrow Decide \longrightarrow Interlock \longrightarrow Act \longrightarrow Verify \longrightarrow Audit}$$
 
-## System Architecture
-
-```mermaid
-graph TD
-    subgraph Producers ["Telemetry Ingestion Layer"]
-        SIM["Thermodynamic Physics Simulator"]
-        MQTT["Hardware MQTT Broker (ESP32 / Zigbee)"]
-    end
-
-    subgraph Pipeline ["Ingestion & Normalization Pipeline"]
-        ING["POST /api/telemetry/ingest"]
-        VAL["Zod Bounds & Reality Validator"]
-        BUF["Time-Series Buffer & Deduplicator"]
-    end
-
-    subgraph DataStore ["Persistence & Indexing Layer"]
-        PG[("PostgreSQL Database (Prisma ORM)")]
-        TS[("telemetryReading (Composite Indexed)")]
-        BASE[("telemetryBaseline (168-Hour Matrix)")]
-    end
-
-    subgraph Engine ["Intelligence & Event Services"]
-        RULES["Rule & Threshold Evaluator"]
-        ANOMALY["Deterministic Anomaly Engine (Z-Score)"]
-        DRIFT["Persistent Drift / Rate-of-Change Detector"]
-        SSE["Server-Sent Events (SSE) Broadcaster"]
-    end
-
-    subgraph UI ["User Interface (Next.js 15)"]
-        DASH["Overview Dashboard"]
-        FLOOR["2D Floor Plan Schematic"]
-        ROOM["Room Micro-Climate Inspector"]
-        HIST["Historical Analytics (24h/7d/30d)"]
-        INSIGHT["Explainable AI Proof Inspector"]
-    end
-
-    SIM -->|HTTP REST Batch| ING
-    MQTT -->|Gateway Bridge| ING
-    ING --> VAL
-    VAL --> BUF
-    BUF --> PG
-    PG --> TS
-    PG --> BASE
-    BUF --> RULES
-    BUF --> ANOMALY
-    BUF --> DRIFT
-    RULES --> SSE
-    ANOMALY --> SSE
-    BUF --> SSE
-    SSE --> DASH
-    SSE --> FLOOR
-    SSE --> ROOM
-    PG --> HIST
-    PG --> INSIGHT
+```
++-----------------------------------------------------------------------------------------------------------------------+
+| 1. Physical Edge & Sensing        ESP32 DevKit v1, DHT22, BME280, PIR, Reed, Power Clamps, Flow Meters, Sim Engine    |
+| 2. Edge Broker Transport          Eclipse Mosquitto MQTT Broker (TLS 1.3, QoS 1, Structured Topic Taxonomy)           |
+| 3. Normalized Ingestion Gateway   POST /api/telemetry/ingest (Dual-Producer Abstraction: MQTT Gateway + Simulator)   |
+| 4. Bounds & Reality Validator     Zod Schema + Physical Envelopes + Spike & Impossible Rate-of-Change Filtering       |
+| 5. Statistical Anomaly Engine     168-Hour Empirical Gaussian Baselines (mu +- 2.5 sigma, Parametric Z-Scores)        |
+| 6. Cross-Sensor Correlation       Sliding Temporal Windows (10-15 min), Multi-Signal Signatures, Channel Corroboration|
+| 7. Multi-Horizon Forecasting      Cyclical Encodings + Diurnal Decay + Bayesian Occupancy + GBDT (28.1% RMSE drop)    |
+| 8. Predictive Anticipation        Analytical Gaussian CDF Hazard P(Y >= T), Time-to-Threshold (tau) Early Warning     |
+| 9. Automation Decision Engine     Policy Evaluation, Cooldown Timers, Flapping Damping, Priority Resolution           |
+| 10. Safety Guardrails & Interlock Fail-Closed Evaluation, Mode Gate (AUTO/MANUAL/DISABLED), Strict Low-Voltage Guard  |
+| 11. Idempotent Command Dispatch   Durable DeviceCommand, Dual-Path (REST + MQTT QoS 1), Hardware Actuator Handlers    |
+| 12. Verification & Observability  Empirical Delta-M Trajectory Verifier, In-Process Metrics, Causal SystemEvent Audit |
++-----------------------------------------------------------------------------------------------------------------------+
 ```
 
 ---
 
-## Engineering Documentation
+## Core Engineering Highlights
 
-Detailed engineering specifications and audit reports are located in `/docs`:
-- [`automation-architecture.md`](docs/automation-architecture.md): Phase 7 closed-loop architecture, 8-tier progression, fail-closed safety model, and class hierarchy.
-- [`command-protocol.md`](docs/command-protocol.md): Phase 7 MQTT command/ack contracts, JSON schemas, firmware GPIO handlers, and idempotency guarantees.
-- [`closed-loop-evaluation.md`](docs/closed-loop-evaluation.md): Phase 7 empirical evaluation across 8 controlled benchmark scenarios with 100% pass score.
-- [`hardware-validation.md`](docs/hardware-validation.md): Phase 6B physical hardware acceptance test report, sensor bench specifications, and failure mitigations.
-- [`iot-architecture.md`](docs/iot-architecture.md): Phase 6 real IoT microcontroller architecture, MQTT broker integration, and device state machines.
-- [`mqtt-contract.md`](docs/mqtt-contract.md): Strict MQTT topic taxonomy, payload schemas, and Quality of Service (QoS) guarantees.
-- [`device-provisioning.md`](docs/device-provisioning.md): Device registration, scrypt token hashing, and hardware lifecycle management.
-- [`predictive-incidents.md`](docs/predictive-incidents.md): Phase 5 predictive incident engine, multi-horizon lead-time anticipation, and mitigation runbooks.
-- [`predictive-evaluation.md`](docs/predictive-evaluation.md): Phase 5 benchmark suite evaluating predictive incident detection against false alarms.
-- [`ml-model-evaluation.md`](docs/ml-model-evaluation.md): Phase 4 learned ML (GBDT & Random Forest) vs statistical baseline walk-forward comparison.
-- [`prediction-evaluation.md`](docs/prediction-evaluation.md): Phase 3 multi-horizon forecast accuracy and degradation audit.
-- [`engineering-audit.md`](docs/engineering-audit.md): Comprehensive subsystem audit, verified vulnerability remediations, and technical debt.
-- [`intelligence-evaluation.md`](docs/intelligence-evaluation.md): Quantitative benchmark report across 7 controlled scenarios, detection latency, and failure mode analysis.
-- [`architecture.md`](docs/architecture.md): In-depth system design, data flows, and component breakdown.
-- [`data-model.md`](docs/data-model.md): Relational schema, entity relationships, cascade policies, and composite indexes.
-- [`telemetry.md`](docs/telemetry.md): Producer/consumer ingestion contracts, physical simulation equations, and ESP32 MQTT guide.
-- [`intelligence.md`](docs/intelligence.md): Mathematical formulations for baseline matrices, Z-score derivations, and explainability proofs.
-
+- **Digital Twin Modeling**: Structured relational hierarchy (`Home` $\to$ `Floors` $\to$ `Rooms` $\to$ `Devices` $\to$ `Sensors` $\to$ `Telemetry` $\to$ `Events` $\to$ `Incidents` $\to$ `Predictions` $\to$ `Automations` $\to$ `SystemEvents`).
+- **Strict Producer Decoupling**: Ingests data from physical **ESP32 microcontrollers** over MQTT and an integrated **thermodynamic physics simulator** over HTTP through the exact same normalized contract with zero downstream code differences.
+- **Explainable Machine Learning (Phase 4)**: Gradient Boosted Decision Trees (GBDT) and Random Forest models achieving a **28.1% RMSE reduction** over statistical baselines across multi-horizon forecasts ($15\text{m}, 1\text{h}, 4\text{h}, 24\text{h}$).
+- **Walk-Forward Cross-Validation**: Continuous rolling-origin out-of-sample backtesting evaluating MAE, RMSE, MAPE, and horizon degradation without lookahead bias.
+- **Cross-Sensor Incident Intelligence (Phase 2)**: Correlates disparate physical signals within sliding windows to detect unified incidents (`COOKING_EVENT`, `WATER_LEAK`, `AC_FAILURE`, `WINDOW_THERMAL_EVENT`) with a **0.00% false-positive rate** under clean baseline conditions.
+- **Predictive Incident Anticipation (Phase 5)**: Solves analytical Gaussian CDF hazard probabilities $P(Y \ge T) = 1 - \Phi\left(\frac{T - \hat{y}}{\sigma}\right)$ to generate early warnings before physical breaches occur.
+- **Closed-Loop Intelligent Automation (Phase 7)**: Safe, explainable actuator control layer. Predictions never actuate directly; every action passes through an explicit fail-closed safety evaluator, low-voltage boundary enforcement, and post-actuation verification ($\Delta M$).
+- **Physical Hardware Acceptance Testing (Phase 6 & 6B)**: 8 end-to-end hardware acceptance tests validating real ESP32 DevKit v1 boards, GPIO sensors (DHT22, PIR, Reed switch), Wi-Fi reconnection, and MQTT broker recovery.
+- **Production Observability & Causal Audit (Phase 8)**: Structured `SystemEvent` audit log tracking causality across stages with shared `correlationId`s, sliding-window $p50/p95/p99$ latency metrics, and deterministic `/api/health` diagnostics.
+- **Deterministic Presentation Console (Phase 8)**: Interactive presenter console at `/demo` executing 6 controlled, real-pipeline scenarios with zero synthetic heuristics or UI faking.
 
 ---
 
-## Quickstart & Local Development
+## Quantitative Machine Learning Evaluation
 
-### Prerequisites
+Evaluated via rolling-origin walk-forward cross-validation across 40,320 hourly telemetry readings:
+
+| Target Metric | Baseline Model | GBDT Tree Model | RMSE Baseline | RMSE GBDT | Improvement |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Household Power** | Seasonal Diurnal AR | GBDT Regressor (50 trees, depth 4) | $342.6\,\text{W}$ | $246.3\,\text{W}$ | **-28.1%** |
+| **Indoor Temperature** | Exponential Moving Avg | GBDT Regressor (50 trees, depth 4) | $0.84^\circ\text{C}$ | $0.61^\circ\text{C}$ | **-27.4%** |
+| **Indoor CO₂** | Linear Trend + Diurnal | GBDT Regressor (50 trees, depth 4) | $92.4\,\text{ppm}$ | $68.1\,\text{ppm}$ | **-26.3%** |
+| **Room Occupancy** | Naive Persistence | Bayesian Prior + Motion Decay | $0.38$ | $0.19$ | **-50.0%** |
+
+*All inferences execute within an 8.7 ms average latency envelope with an automatic 800 ms circuit-breaker fallback to statistical baselines.*
+
+---
+
+## Physical Hardware Integration & IoT Bench (Phase 6 & 6B)
+
+The platform communicates with physical **ESP32 DevKit v1** nodes over 2.4 GHz Wi-Fi and MQTT:
+
+```
+Physical Sensors ──> ESP32 DevKit v1 ──> Wi-Fi (2.4 GHz) ──> Mosquitto (:1883) ──> MQTT Gateway ──> PostgreSQL ──> Next.js 15 UI
+```
+
+### Hardware Pinout & Bench Specifications
+- **Microcontroller**: ESP32 DevKit v1 (Espressif ESP-WROOM-32)
+- **DHT22 (AM2302)** on `GPIO 4`: Temperature ($^\circ\text{C}$) & Relative Humidity ($\%$)
+- **HC-SR501 PIR Sensor** on `GPIO 18`: Room Occupancy State ($0 \to 1$)
+- **Magnetic Reed Switch** on `GPIO 19` (`INPUT_PULLUP`): Contact Envelope ($0 = \text{Closed}, 1 = \text{Open}$)
+- **Status LED** on `GPIO 2`: Heartbeat & MQTT connectivity indicator
+- **Low-Voltage Actuator Relay** on `GPIO 23`: Auxiliary ventilation/fan control (optocoupler isolated)
+
+Firmware source code and PlatformIO project configuration are located in [`firmware/`](firmware/).
+
+---
+
+## Technical Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend Framework** | Next.js 15 (App Router), React 19, TypeScript 5.7 |
+| **Styling & Visualization** | Tailwind CSS 3.4, Lucide React, SVG Floor Plans, Canvas Sparklines |
+| **Backend & Runtime** | Node.js v20/v22, Next.js Server Actions, Web Streams API (SSE) |
+| **Database & ORM** | PostgreSQL 15+, Prisma ORM 6.1 (Composite Indexing, Connection Pooling) |
+| **Validation & Security** | Zod 3.24, scrypt token hashing, HMAC-SHA256 session signatures |
+| **Edge IoT & Messaging** | Eclipse Mosquitto MQTT v2.0, MQTT.js client, ESP32 C++ (PlatformIO) |
+| **Testing & Quality** | Vitest 2.1, 33 test suites, 158+ automated unit/integration/E2E tests |
+
+---
+
+## Quickstart & Local Setup
+
+### 1. Prerequisites
 - **Node.js**: v20 or v22+
-- **PostgreSQL**: v15+ running locally on port 5432 (or via Docker Compose)
+- **PostgreSQL**: v15+ (Local or Docker)
+- **MQTT Broker** *(Optional for physical hardware)*: Eclipse Mosquitto on port 1883
 
-### 1. Installation
+### 2. Installation
 ```bash
-git clone https://github.com/your-repo/home-intelligence-platform.git
+git clone https://github.com/aadeeshsh15-netizen/home-intelligence-platform.git
 cd "home-intelligence-platform"
 npm install
 ```
 
-### 2. Configure Environment Variables
+### 3. Environment Configuration
 Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-Default connection string:
+Ensure your database connection string is configured:
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/home_intelligence?schema=public"
 JWT_SECRET="super-secret-dev-jwt-key-change-in-production-min-32-chars"
+MQTT_BROKER_URL="mqtt://localhost:1883"
 ```
 
-### 3. Initialize Database & Seed High-Fidelity Telemetry
+### 4. Database Setup & Telemetry Seeding
 ```bash
 # Push schema and generate Prisma client
 npx prisma db push
 
-# Seed 30 days of realistic correlated telemetry (40,320 readings, 4,704 baselines), devices, and rules
+# Seed 30 days of realistic correlated telemetry, 168h baselines, devices, and rules
 npm run db:seed
 ```
 *Default Seeded User:* `engineer@homeintelligence.internal` (Password: `admin123`)
 
-### 4. Run Development Server
+### 5. Launch the Platform
 ```bash
 npm run dev
 ```
-Navigate to [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## Automated Testing & Benchmarks
+## Running Verification Suites & Benchmarks
 
-Run test suites (Vitest):
+Execute the entire test suite (unit, integration, ML backtests, hardware acceptance, automation benchmarks, and observability):
+
 ```bash
-npm run test
-```
-The test suite (136 automated tests across 29 test suites) verifies:
-- **Unit Math, Physics & Thermodynamics**: Statistical distributions, Z-scores, percentiles, downsampling, linear regression slopes, diurnal cycles, Newton's law of thermal cooling, and CO₂ mass balances.
-- **Predictive Mathematical Baselines**: Autoregressive residual decay, Naive Persistence expanding uncertainty, EMA damped momentum, Bayesian occupancy prior relaxation, and trigonometric cyclical encodings.
-- **Learned Machine Learning Models (Phase 4)**: Gradient Boosted Decision Trees (GBDT) and Random Forest inference, rolling-origin walk-forward evaluation, and sub-10ms circuit-breaker fallback.
-- **Predictive Incident Intelligence (Phase 5)**: Multi-horizon lead-time anticipation for CO₂ ventilation alerts, compressor failures, peak energy surges, and thermal ingress with automated mitigation runbooks.
-- **Physical Reality Bounds**: Ingestion validation schemas, PM2.5 boundary checks, and sensor unit mismatch rejection.
-- **Multi-Tenant Security**: HMAC-SHA256 signed session token generation, verification, tampering rejection, and home ownership authorization.
-- **Pipeline Integrity**: Database-level duplicate suppression (`skipDuplicates: true`), out-of-order timestamp regression protection, and inactive sensor timeout transitions.
-- **Cross-Sensor Incident Intelligence Engine**: Controlled benchmark evaluating cooking activity, water leaks, AC failures, window thermal breaches, and 0% false positives under baseline operations.
-- **IoT Microcontroller Lifecycle & Security (Phase 6)**: Scrypt salted device token hashing, replay timestamp protection, tenant isolation, and watchdog inactivity transitions (`ONLINE` $\to$ `STALE` $\to$ `OFFLINE`).
-- **Physical Hardware Acceptance Test Suite (Phase 6B)**: 8 end-to-end hardware acceptance tests verifying physical temperature, humidity, PIR occupancy, reed switch contact, disconnect watchdog preservation, auto-recovery, and multi-sensor scenario dispatch.
-- **Closed-Loop Intelligent Automation & Verification (Phase 7)**: 8 controlled benchmark scenarios (100% pass score) validating anticipatory CO₂ ventilation, cooling assist, peak load shedding, fail-closed offline rejection, manual override enforcement, command idempotency, timeout recovery, and low-probability suppression.
-
----
-
-## Physical Hardware Integration & Demo (Phase 6 & 6B)
-
-The platform natively ingests telemetry from physical **ESP32 DevKit v1** microcontrollers communicating over 2.4 GHz Wi-Fi and MQTT without requiring mains-voltage hardware.
-
-```
-Physical Sensors ──> ESP32 DevKit v1 ──> Wi-Fi (2.4 GHz) ──> MQTT Broker (:1883) ──> Gateway ──> PostgreSQL ──> Next.js 15 UI
+npm test -- --fileParallelism=false
 ```
 
-### Hardware Specification & Pinout
-- **Microcontroller**: ESP32 DevKit v1 (ESP-WROOM-32)
-- **DHT22 (AM2302)** on `GPIO 4`: Temperature (°C) & Relative Humidity (%)
-- **HC-SR501 PIR** on `GPIO 18`: Room Occupancy State ($0 \to 1$)
-- **Magnetic Reed Switch** on `GPIO 19` (`INPUT_PULLUP`): Window/Door Contact ($0 = \text{Closed}, 1 = \text{Open}$)
-- **Status LED** on `GPIO 2`: Heartbeat indicator
+### Test Suite Coverage:
+- **Physics & Thermodynamics**: Gaussian Z-scores, percentiles, Newton's law of thermal cooling, CO₂ mass balance equations.
+- **Machine Learning & Baselines**: Autoregressive residual decay, EMA momentum, Bayesian occupancy priors, GBDT inference, walk-forward cross-validation.
+- **Cross-Sensor Incidents**: Cooking activity, unmonitored water leaks, AC cooling failures, thermal envelope breaches.
+- **Predictive Anticipation**: Gaussian CDF hazard calculations, time-to-threshold estimations, early warning triggers.
+- **Physical IoT Lifecycle**: Salted token hashing, replay protection, device disconnect watchdogs (`ONLINE` $\to$ `STALE` $\to$ `OFFLINE`).
+- **Closed-Loop Automation**: Policy resolution, flapping damping, fail-closed safety rejection, low-voltage isolation, post-actuation verification.
+- **Observability & Metrics**: In-process rolling latencies ($p50/p95/p99$), deterministic health checks, structured `SystemEvent` audit logging.
 
-### Running the Hardware Acceptance Validation Suite
-Execute the hardware validation script to verify all 8 acceptance tests against the live database and MQTT broker:
+To run physical hardware acceptance tests against a live MQTT broker:
 ```bash
 npx tsx scripts/validate-hardware.ts
 ```
 
-### Flashing a Physical ESP32 Device
-1. Navigate to **Fleet Inventory** (`/devices`) in the Web UI.
-2. Click **Provision ESP32 Node**, select room and equipped sensors, and submit.
-3. Copy the generated credentials snippet to `firmware/include/config.h`.
-4. Build and flash the firmware using PlatformIO:
-   ```bash
-   cd firmware
-   pio run --target upload
-   pio device monitor -b 115200
-   ```
-5. View physical telemetry update live across the 2D Floor Plan (`/home-view`), Room Inspector (`/rooms/[id]`), and Realtime SSE Stream.
+---
+
+## Presentation & Demo Runbook
+
+An interactive, deterministic demonstration console is available at `/demo`. It executes 6 real-pipeline operational scenarios:
+
+1. **Normal Household Operation**: Nominal baseline operations with healthy telemetry corridors.
+2. **Unmonitored Water Leak**: Multi-sensor correlation of continuous flow during unoccupied hours.
+3. **CO₂ Buildup & Autonomous Ventilation**: Predictive hazard detection, fail-closed policy evaluation, command dispatch, and empirical $\Delta M$ verification.
+4. **AC Cooling Deficit**: Compressor failure anticipation under rising indoor thermal load.
+5. **Peak Energy Surge**: GBDT multi-horizon power surge prediction and autonomous non-essential load shedding.
+6. **Safety Guardrail Rejection**: Fail-closed safety interlock blocking actuation when policy is set to `MANUAL` mode.
+
+For a detailed minute-by-minute presentation script, see [`docs/demo-guide.md`](docs/demo-guide.md).
 
 ---
 
-## Closed-Loop Intelligent Automation (Phase 7)
+## Architectural Documentation Index
 
-Phase 7 introduces an intelligent, safe, and explainable actuation and control layer that bridges predictions and physical actuators:
+Comprehensive engineering specifications are located in [`docs/`](docs/):
 
-```
-Sense ──> Detect ──> Correlate ──> Predict ──> Anticipate ──> Decide ──> Act ──> Verify
-```
-
-### Key Engineering Guarantees
-- **Decoupled Decision Engine**: Predictive models never directly actuate devices. All interventions pass through `AutomationDecisionEngine`.
-- **Fail-Closed Safety Model**: Actions are immediately blocked if a policy is set to `MANUAL` or `DISABLED`, if the target device is `OFFLINE` or `STALE`, or if electrical safety is breached.
-- **Strict Low-Voltage Operation**: Software and hardware safeguards restrict automation strictly to low-voltage actuators (auxiliary DC relays, ventilation fans, LEDs). Mains-voltage switching is prohibited.
-- **Empirical Verification Loop**: Following command dispatch, the `AutomationVerificationEngine` tracks post-actuation telemetry against pre-actuation baselines to verify physical trajectory ($\Delta\text{Metric}$) and assign terminal states (`VERIFIED_EFFECTIVE` / `VERIFIED_INEFFECTIVE`).
-- **Web UI Management**: View live automation policies, trigger manual commands, toggle `AUTO`/`MANUAL` modes, inspect real-time intervention executions, and audit closed-loop metrics at `/automations`.
+- [`architecture.md`](docs/architecture.md): Canonical 12-stage control loop, component interactions, and latency budgets.
+- [`demo-guide.md`](docs/demo-guide.md): 2-minute presenter script with screen transitions and talking points.
+- [`automation-architecture.md`](docs/automation-architecture.md): Phase 7 closed-loop architecture, safety guardrails, and verification engine.
+- [`closed-loop-evaluation.md`](docs/closed-loop-evaluation.md): Empirical verification benchmarks across 8 controlled automation scenarios.
+- [`command-protocol.md`](docs/command-protocol.md): Phase 7 MQTT command/acknowledgment contracts and GPIO firmware handlers.
+- [`hardware-validation.md`](docs/hardware-validation.md): Phase 6B physical ESP32 hardware acceptance test report.
+- [`iot-architecture.md`](docs/iot-architecture.md): Phase 6 edge microcontroller architecture and MQTT topic design.
+- [`predictive-incidents.md`](docs/predictive-incidents.md): Phase 5 predictive incident engine and hazard formulations.
+- [`ml-model-evaluation.md`](docs/ml-model-evaluation.md): Phase 4 GBDT tree model evaluation and walk-forward benchmark.
+- [`data-model.md`](docs/data-model.md): PostgreSQL entity relationships, cascade policies, and composite indexes.
+- [`engineering-audit.md`](docs/engineering-audit.md): Complete subsystem audit and verified vulnerability remediations.
 
 ---
 
-## Docker Deployment
+## Architectural Trade-Offs & Design Decisions
 
-Build and run the entire platform with PostgreSQL container:
-```bash
-docker compose up --build
-```
-The application will be accessible on `http://localhost:3000`.
+1. **In-Memory Forecasts vs. Precomputed Persistence**:
+   - *Decision*: Forecasts across 4 horizons are calculated on-demand with a 30-second memory cache rather than continuously written to PostgreSQL.
+   - *Rationale*: Precomputing 4 horizons for 100 sensors every minute generates $>500,000$ database rows daily with $99.9\%$ going unread. On-demand inference (<10 ms) with caching eliminates database bloat while delivering fresh predictions.
+2. **Fail-Closed Safety vs. Control Availability**:
+   - *Decision*: If an actuator reports `STALE` status or if telemetry is missing, the automation engine rejects execution immediately.
+   - *Rationale*: In residential environments, false actuations (e.g., closing a valve or cycling a compressor unnecessarily) present higher physical risk than delayed interventions.
+3. **Parametric Gaussian Baselines vs. Deep Neural Networks**:
+   - *Decision*: Single-sensor anomaly detection relies on 168-hour empirical Gaussian distributions ($\mu \pm 2.5\sigma$) rather than opaque autoencoders.
+   - *Rationale*: Complete mathematical explainability. Every anomaly card provides the exact mean, standard deviation, and sample count so users and engineers can audit why an alert fired.
+
+---
+
+## Author & Attribution
+
+- **Architect & Author**: Aadeesh Sharma ([@aadeeshsh15-netizen](https://github.com/aadeeshsh15-netizen))
+- **Email**: [aadeeshsh15@gmail.com](mailto:aadeeshsh15@gmail.com)
+- **License**: MIT
