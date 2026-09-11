@@ -11,6 +11,8 @@ import { EmaProvider } from './providers/ema';
 import { SeasonalDecayProvider } from './providers/seasonal-decay';
 import { BayesianOccupancyProvider } from './providers/occupancy-prior';
 import { RemoteMlAdapterProvider } from './providers/remote-adapter';
+import { GradientBoostingProvider } from './providers/gradient-boosting';
+import { RandomForestProvider } from './providers/random-forest';
 import { logger } from '@/lib/logger';
 
 interface CacheEntry {
@@ -31,6 +33,8 @@ export class PredictionEngine {
     this.registerProvider(new SeasonalDecayProvider());
     this.registerProvider(new BayesianOccupancyProvider());
     this.registerProvider(new RemoteMlAdapterProvider());
+    this.registerProvider(new GradientBoostingProvider());
+    this.registerProvider(new RandomForestProvider());
   }
 
   public static getInstance(): PredictionEngine {
@@ -109,6 +113,22 @@ export class PredictionEngine {
           version: '1.0.0',
           target: 'ROOM_TEMPERATURE',
           hyperparameters: { gamma: 0.03 },
+          isDefault: false,
+        },
+        {
+          name: 'Gradient Boosted Trees (GBDT)',
+          type: 'ML_GRADIENT_BOOSTING',
+          version: '1.0.0',
+          target: 'HOUSEHOLD_POWER',
+          hyperparameters: { nEstimators: 100, learningRate: 0.05, maxDepth: 4 },
+          isDefault: false,
+        },
+        {
+          name: 'Random Forest Regressor (RF)',
+          type: 'ML_RANDOM_FOREST',
+          version: '1.0.0',
+          target: 'HOUSEHOLD_POWER',
+          hyperparameters: { nEstimators: 100, maxDepth: 8, featureSubsample: 0.6 },
           isDefault: false,
         },
       ];

@@ -1,0 +1,252 @@
+{
+  "STATISTICAL_PERSISTENCE": {
+    "modelType": "STATISTICAL_PERSISTENCE",
+    "modelName": "Naive Persistence",
+    "sampleCount": 1304,
+    "overallMae": 33.945,
+    "overallRmse": 99.232,
+    "overallMape": 4.01,
+    "meanLatencyMs": 5.79,
+    "p99LatencyMs": 10.15,
+    "coverage80": 79.3,
+    "coverage95": 84,
+    "horizonMetrics": {
+      "15m": {
+        "horizonMinutes": 15,
+        "mae": 7.238,
+        "rmse": 29.989,
+        "mape": 0.71,
+        "coverage80": 75.8,
+        "coverage95": 85.6,
+        "sampleCount": 326
+      },
+      "1h": {
+        "horizonMinutes": 60,
+        "mae": 25.383,
+        "rmse": 83.039,
+        "mape": 2.54,
+        "coverage80": 75.2,
+        "coverage95": 82.5,
+        "sampleCount": 326
+      },
+      "4h": {
+        "horizonMinutes": 240,
+        "mae": 95.469,
+        "rmse": 167.603,
+        "mape": 9.4,
+        "coverage80": 67.8,
+        "coverage95": 69,
+        "sampleCount": 326
+      },
+      "24h": {
+        "horizonMinutes": 1440,
+        "mae": 7.688,
+        "rmse": 59.184,
+        "mape": 3.39,
+        "coverage80": 98.5,
+        "coverage95": 99.1,
+        "sampleCount": 326
+      }
+    }
+  },
+  "STATISTICAL_EMA": {
+    "modelType": "STATISTICAL_EMA",
+    "modelName": "Exponential Moving Average",
+    "sampleCount": 1304,
+    "overallMae": 35.933,
+    "overallRmse": 99.725,
+    "overallMape": 4.21,
+    "meanLatencyMs": 6.17,
+    "p99LatencyMs": 12.61,
+    "coverage80": 73.6,
+    "coverage95": 83.7,
+    "horizonMetrics": {
+      "15m": {
+        "horizonMinutes": 15,
+        "mae": 11.172,
+        "rmse": 32.907,
+        "mape": 1.11,
+        "coverage80": 75.2,
+        "coverage95": 88.3,
+        "sampleCount": 326
+      },
+      "1h": {
+        "horizonMinutes": 60,
+        "mae": 29.401,
+        "rmse": 84.23,
+        "mape": 2.95,
+        "coverage80": 60.7,
+        "coverage95": 79.4,
+        "sampleCount": 326
+      },
+      "4h": {
+        "horizonMinutes": 240,
+        "mae": 95.472,
+        "rmse": 167.632,
+        "mape": 9.4,
+        "coverage80": 61,
+        "coverage95": 68.1,
+        "sampleCount": 326
+      },
+      "24h": {
+        "horizonMinutes": 1440,
+        "mae": 7.688,
+        "rmse": 59.184,
+        "mape": 3.39,
+        "coverage80": 97.5,
+        "coverage95": 99.1,
+        "sampleCount": 326
+      }
+    }
+  },
+  "STATISTICAL_SEASONAL_DECAY": {
+    "modelType": "STATISTICAL_SEASONAL_DECAY",
+    "modelName": "Seasonal Diurnal Decay",
+    "sampleCount": 1304,
+    "overallMae": 8.902,
+    "overallRmse": 41.421,
+    "overallMape": 1.55,
+    "meanLatencyMs": 7.14,
+    "p99LatencyMs": 15.69,
+    "coverage80": 83.7,
+    "coverage95": 96.2,
+    "horizonMetrics": {
+      "15m": {
+        "horizonMinutes": 15,
+        "mae": 6.904,
+        "rmse": 25.808,
+        "mape": 0.7,
+        "coverage80": 94.5,
+        "coverage95": 97.9,
+        "sampleCount": 326
+      },
+      "1h": {
+        "horizonMinutes": 60,
+        "mae": 8.016,
+        "rmse": 29.275,
+        "mape": 0.82,
+        "coverage80": 78.5,
+        "coverage95": 94.2,
+        "sampleCount": 326
+      },
+      "4h": {
+        "horizonMinutes": 240,
+        "mae": 7.248,
+        "rmse": 28.998,
+        "mape": 0.73,
+        "coverage80": 81,
+        "coverage95": 96.9,
+        "sampleCount": 326
+      },
+      "24h": {
+        "horizonMinutes": 1440,
+        "mae": 13.441,
+        "rmse": 67.074,
+        "mape": 3.96,
+        "coverage80": 80.7,
+        "coverage95": 96,
+        "sampleCount": 326
+      }
+    }
+  },
+  "ML_RANDOM_FOREST": {
+    "modelType": "ML_RANDOM_FOREST",
+    "modelName": "Random Forest Regressor",
+    "sampleCount": 1304,
+    "overallMae": 29.014,
+    "overallRmse": 51.687,
+    "overallMape": 3.85,
+    "meanLatencyMs": 6.98,
+    "p99LatencyMs": 25.86,
+    "coverage80": 31.2,
+    "coverage95": 35.7,
+    "horizonMetrics": {
+      "15m": {
+        "horizonMinutes": 15,
+        "mae": 24.008,
+        "rmse": 26.921,
+        "mape": 2.7,
+        "coverage80": 12,
+        "coverage95": 14.4,
+        "sampleCount": 326
+      },
+      "1h": {
+        "horizonMinutes": 60,
+        "mae": 8.559,
+        "rmse": 10.171,
+        "mape": 0.94,
+        "coverage80": 30.7,
+        "coverage95": 35,
+        "sampleCount": 326
+      },
+      "4h": {
+        "horizonMinutes": 240,
+        "mae": 18.345,
+        "rmse": 38.652,
+        "mape": 1.61,
+        "coverage80": 68.7,
+        "coverage95": 76.7,
+        "sampleCount": 326
+      },
+      "24h": {
+        "horizonMinutes": 1440,
+        "mae": 65.142,
+        "rmse": 91.454,
+        "mape": 10.15,
+        "coverage80": 13.5,
+        "coverage95": 16.6,
+        "sampleCount": 326
+      }
+    }
+  },
+  "ML_GRADIENT_BOOSTING": {
+    "modelType": "ML_GRADIENT_BOOSTING",
+    "modelName": "Gradient Boosted Trees",
+    "sampleCount": 1304,
+    "overallMae": 3.115,
+    "overallRmse": 29.77,
+    "overallMape": 0.98,
+    "meanLatencyMs": 5.82,
+    "p99LatencyMs": 8.79,
+    "coverage80": 82.7,
+    "coverage95": 96.7,
+    "horizonMetrics": {
+      "15m": {
+        "horizonMinutes": 15,
+        "mae": 1.092,
+        "rmse": 1.341,
+        "mape": 0.12,
+        "coverage80": 85,
+        "coverage95": 96.9,
+        "sampleCount": 326
+      },
+      "1h": {
+        "horizonMinutes": 60,
+        "mae": 2.007,
+        "rmse": 2.424,
+        "mape": 0.22,
+        "coverage80": 81.6,
+        "coverage95": 96,
+        "sampleCount": 326
+      },
+      "4h": {
+        "horizonMinutes": 240,
+        "mae": 2.016,
+        "rmse": 2.419,
+        "mape": 0.22,
+        "coverage80": 82.5,
+        "coverage95": 96,
+        "sampleCount": 326
+      },
+      "24h": {
+        "horizonMinutes": 1440,
+        "mae": 7.347,
+        "rmse": 59.427,
+        "mape": 3.36,
+        "coverage80": 81.9,
+        "coverage95": 97.9,
+        "sampleCount": 326
+      }
+    }
+  }
+}

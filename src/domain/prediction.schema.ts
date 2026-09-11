@@ -14,6 +14,7 @@ export const ModelTypeEnum = z.enum([
   'BAYESIAN_OCCUPANCY',
   'ML_LINEAR_REGRESSION',
   'ML_GRADIENT_BOOSTING',
+  'ML_RANDOM_FOREST',
   'REMOTE_MICROSERVICE',
 ]);
 
