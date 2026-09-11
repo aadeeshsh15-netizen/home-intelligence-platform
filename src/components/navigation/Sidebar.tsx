@@ -13,6 +13,7 @@ import {
   Lightbulb,
   FlaskConical,
   Activity,
+  Sliders,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -21,6 +22,7 @@ const navItems = [
   { name: 'Home View', href: '/home-view', icon: Home },
   { name: 'Rooms', href: '/rooms', icon: DoorOpen },
   { name: 'Devices', href: '/devices', icon: Cpu },
+  { name: 'Automations', href: '/automations', icon: Sliders },
   { name: 'Historical Analytics', href: '/analytics', icon: LineChart },
   { name: 'Event Stream', href: '/events', icon: BellRing },
   { name: 'AI Insights', href: '/insights', icon: Lightbulb },

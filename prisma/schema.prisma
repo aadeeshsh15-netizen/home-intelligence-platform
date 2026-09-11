@@ -24,9 +24,17 @@ enum DeviceProtocol {
 
 enum DeviceStatus {
   ONLINE
+  STALE
   DEGRADED
   OFFLINE
   ERROR
+}
+
+enum ProvisioningStatus {
+  UNPROVISIONED
+  PENDING_PAIRING
+  PROVISIONED
+  REVOKED
 }
 
 enum SensorType {
@@ -123,6 +131,60 @@ enum ModelType {
   REMOTE_MICROSERVICE
 }
 
+enum AutomationMode {
+  AUTO
+  MANUAL
+  DISABLED
+}
+
+enum AutomationStatus {
+  IDLE
+  TRIGGERED
+  EXECUTING
+  VERIFYING
+  COMPLETED
+  COOLDOWN
+  FAILED
+  OVERRIDDEN
+}
+
+enum CommandStatus {
+  PENDING
+  SENT
+  ACKNOWLEDGED
+  COMPLETED
+  REJECTED
+  EXPIRED
+  TIMED_OUT
+  FAILED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED_EFFECTIVE
+  VERIFIED_INEFFECTIVE
+  INCONCLUSIVE
+  FAILED
+}
+
+enum ActuatorType {
+  VENTILATION_FAN
+  STATUS_LED
+  LOW_VOLTAGE_RELAY
+  ALARM_BUZZER
+  THERMOSTAT_SETPOINT
+}
+
+enum ActuatorAction {
+  TURN_ON
+  TURN_OFF
+  SET_SPEED
+  SET_LEVEL
+  PULSE
+  SHED_LOAD
+}
+
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -148,6 +210,9 @@ model Home {
   incidents   Incident[]
   predictiveIncidents PredictiveIncident[]
   modelEvaluations ModelEvaluation[]
+  automationPolicies AutomationPolicy[]
+  deviceCommands   DeviceCommand[]
+  automationExecutions AutomationExecution[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -184,21 +249,31 @@ model Room {
 }
 
 model Device {
-  id              String         @id @default(cuid())
-  roomId          String
-  room            Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  name            String         // e.g. "Living Room AC", "Main Heat Pump"
-  deviceType      String         // "HVAC", "LIGHTING", "APPLIANCE", "VENTILATION"
-  protocol        DeviceProtocol @default(SIMULATED)
-  identifier      String         @unique // MAC, Serial, or MQTT Client ID
-  status          DeviceStatus   @default(ONLINE)
-  firmwareVersion String?
-  lastSeenAt      DateTime       @default(now())
-  configuration   Json?          // Dynamic device settings / thresholds
-  sensors         Sensor[]
-  events          Event[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id                 String             @id @default(cuid())
+  roomId             String
+  room               Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  name               String             // e.g. "Living Room AC", "ESP32 Sensor Hub"
+  deviceType         String             // "HVAC", "LIGHTING", "APPLIANCE", "VENTILATION", "ENVIRONMENTAL_HUB"
+  hardwareType       String?            // "ESP32_WROOM_32", "ESP8266", "SIMULATED"
+  protocol           DeviceProtocol     @default(SIMULATED)
+  identifier         String             @unique // MAC, Serial, or MQTT Client ID
+  status             DeviceStatus       @default(ONLINE)
+  provisioningStatus ProvisioningStatus @default(PROVISIONED)
+  macAddress         String?
+  authTokenHash      String?            // Salted hash of device pairing secret
+  firmwareVersion    String?
+  lastSeenAt         DateTime           @default(now())
+  lastHeartbeatAt    DateTime?
+  configuration      Json?              // Dynamic device settings / thresholds
+  isActuator         Boolean            @default(false)
+  actuatorType       ActuatorType?
+  actuatorState      Json?              // e.g. { "power": "OFF", "speed": 0 }
+  sensors            Sensor[]
+  events             Event[]
+  commands           DeviceCommand[]
+  automationExecutions AutomationExecution[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 }
 
 model Sensor {
@@ -380,6 +455,8 @@ model PredictiveIncident {
   confirmedIncidentId   String?                  @unique
   confirmedIncident     Incident?                @relation(fields: [confirmedIncidentId], references: [id], onDelete: SetNull)
 
+  automationExecutions  AutomationExecution[]
+
   createdAt             DateTime                 @default(now())
   updatedAt             DateTime                 @updatedAt
   evaluatedAt           DateTime?
@@ -422,5 +499,99 @@ model ModelEvaluation {
   @@index([modelId, evaluatedAt(sort: Desc)])
   @@index([homeId, target, evaluatedAt(sort: Desc)])
 }
+
+model AutomationPolicy {
+  id               String                 @id @default(cuid())
+  homeId           String
+  home             Home                   @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  name             String
+  description      String
+  mode             AutomationMode         @default(AUTO)
+  triggerType      PredictiveIncidentType
+  targetMetric     PredictionTarget
+  minProbability   Float                  @default(0.75)
+  minConfidence    Float                  @default(0.70)
+  cooldownSec      Int                    @default(900)   // 15 minutes
+  maxRuntimeSec    Int                    @default(1800)  // 30 minutes
+  targetDeviceType String                 // e.g. "VENTILATION_FAN", "STATUS_LED"
+  action           ActuatorAction         @default(TURN_ON)
+  parameters       Json?                  // e.g. { speed: 2, durationSec: 1800 }
+  safetyChecks     Json?                  // e.g. { requireOccupancy: true, failClosed: true }
+  isEnabled        Boolean                @default(true)
+  lastTriggeredAt  DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  executions       AutomationExecution[]
+
+  @@index([homeId, isEnabled, triggerType])
+}
+
+model DeviceCommand {
+  id             String                @id @default(cuid())
+  homeId         String
+  home           Home                  @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  deviceId       String
+  device         Device                @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  commandId      String                @unique // Per-dispatch unique ID for idempotency & ack tracking
+  action         ActuatorAction
+  parameters     Json?
+  expectedState  Json?
+  status         CommandStatus         @default(PENDING)
+  source         String                @default("AUTOMATION_ENGINE") // "AUTOMATION_ENGINE" | "MANUAL_OVERRIDE"
+  issuedAt       DateTime              @default(now())
+  expiresAt      DateTime
+  acknowledgedAt DateTime?
+  completedAt    DateTime?
+  retryCount     Int                   @default(0)
+  maxRetries     Int                   @default(2)
+  resultPayload  Json?
+  errorMessage   String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  executions     AutomationExecution[]
+
+  @@index([homeId, deviceId, status])
+  @@index([commandId])
+}
+
+model AutomationExecution {
+  id                   String                  @id @default(cuid())
+  homeId               String
+  home                 Home                    @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  policyId             String
+  policy               AutomationPolicy        @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  predictiveIncidentId String?
+  predictiveIncident   PredictiveIncident?     @relation(fields: [predictiveIncidentId], references: [id], onDelete: SetNull)
+  deviceId             String
+  device               Device                  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  commandId            String?
+  command              DeviceCommand?          @relation(fields: [commandId], references: [commandId], onDelete: SetNull)
+  status               AutomationStatus        @default(TRIGGERED)
+  triggerReason        String
+  triggerEvidence      Json                    // Structured evidence from actual system
+  decisionExplanation  String                  // Structured explanation text
+  safetyEvaluation     Json                    // Results of safety checks
+  actionTaken          ActuatorAction
+  expectedOutcome      String
+  observedOutcome      String?
+  baselineMetricValue  Float
+  targetMetricValue    Float
+  finalMetricValue     Float?
+  metricDelta          Float?
+  verificationStatus   VerificationStatus      @default(PENDING)
+  commandLatencyMs     Float?
+  verificationLatencyMs Float?
+  isEffective          Boolean?
+  manualOverride       Boolean                 @default(false)
+  startedAt            DateTime                @default(now())
+  verifiedAt           DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  @@index([homeId, status, createdAt(sort: Desc)])
+  @@index([policyId, createdAt(sort: Desc)])
+}
+
 
 

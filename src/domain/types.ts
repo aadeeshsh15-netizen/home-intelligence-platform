@@ -13,6 +13,13 @@ import {
   PredictiveIncidentStatus,
   PredictionOutcome,
   PredictiveIncidentType,
+  ProvisioningStatus,
+  AutomationMode,
+  AutomationStatus,
+  CommandStatus,
+  VerificationStatus,
+  ActuatorType,
+  ActuatorAction,
 } from '@prisma/client';
 
 export type {
@@ -30,6 +37,13 @@ export type {
   PredictiveIncidentStatus,
   PredictionOutcome,
   PredictiveIncidentType,
+  ProvisioningStatus,
+  AutomationMode,
+  AutomationStatus,
+  CommandStatus,
+  VerificationStatus,
+  ActuatorType,
+  ActuatorAction,
 };
 
 export interface RoomWithSensors {
@@ -304,5 +318,145 @@ export interface PredictivePerformanceMetrics {
     count: number;
   }[];
 }
+
+export interface MqttTelemetryMetric {
+  type: SensorType;
+  value: number;
+  unit?: string;
+  sensorId?: string;
+}
+
+export interface MqttTelemetryPayload {
+  timestamp: string | Date;
+  seq?: number;
+  metrics: MqttTelemetryMetric[];
+}
+
+export interface MqttStatusPayload {
+  status: DeviceStatus;
+  firmwareVersion?: string;
+  ip?: string;
+  mac?: string;
+  uptimeSec?: number;
+  rssi?: number;
+  timestamp?: string | Date;
+  reason?: string;
+}
+
+export interface DeviceProvisioningRequest {
+  homeId: string;
+  roomId: string;
+  name: string;
+  deviceType?: string;
+  hardwareType?: string;
+  macAddress?: string;
+  sensorTypes: SensorType[];
+}
+
+export interface DeviceProvisioningResponse {
+  device: {
+    id: string;
+    identifier: string;
+    name: string;
+    homeId: string;
+    roomId: string;
+    hardwareType: string;
+    protocol: DeviceProtocol;
+    provisioningStatus: ProvisioningStatus;
+  };
+  credentials: {
+    topicPrefix: string;
+    telemetryTopic: string;
+    statusTopic: string;
+    commandTopic: string;
+    deviceId: string;
+    authToken: string;
+  };
+  configSnippet: string;
+}
+
+export interface AutomationPolicySummary {
+  id: string;
+  homeId: string;
+  name: string;
+  description: string;
+  mode: AutomationMode;
+  triggerType: PredictiveIncidentType;
+  targetMetric: PredictionTarget;
+  minProbability: number;
+  minConfidence: number;
+  cooldownSec: number;
+  maxRuntimeSec: number;
+  targetDeviceType: string;
+  action: ActuatorAction;
+  parameters?: any;
+  safetyChecks?: any;
+  isEnabled: boolean;
+  lastTriggeredAt: string | null;
+}
+
+export interface DeviceCommandSummary {
+  id: string;
+  homeId: string;
+  deviceId: string;
+  commandId: string;
+  action: ActuatorAction;
+  parameters?: any;
+  expectedState?: any;
+  status: CommandStatus;
+  source: string;
+  issuedAt: string;
+  expiresAt: string;
+  acknowledgedAt?: string | null;
+  completedAt?: string | null;
+  retryCount: number;
+  resultPayload?: any;
+  errorMessage?: string | null;
+}
+
+export interface AutomationExecutionSummary {
+  id: string;
+  homeId: string;
+  policyId: string;
+  policyName?: string;
+  predictiveIncidentId?: string | null;
+  deviceId: string;
+  deviceName?: string;
+  commandId?: string | null;
+  status: AutomationStatus;
+  triggerReason: string;
+  triggerEvidence: any;
+  decisionExplanation: string;
+  safetyEvaluation: any;
+  actionTaken: ActuatorAction;
+  expectedOutcome: string;
+  observedOutcome?: string | null;
+  baselineMetricValue: number;
+  targetMetricValue: number;
+  finalMetricValue?: number | null;
+  metricDelta?: number | null;
+  verificationStatus: VerificationStatus;
+  commandLatencyMs?: number | null;
+  verificationLatencyMs?: number | null;
+  isEffective?: boolean | null;
+  manualOverride: boolean;
+  startedAt: string;
+  verifiedAt?: string | null;
+  completedAt?: string | null;
+}
+
+export interface ClosedLoopBenchmarkMetrics {
+  totalDecisions: number;
+  successfulInterventions: number;
+  failedCommands: number;
+  unnecessaryActions: number;
+  falseActuationRate: number;
+  interventionSuccessRate: number;
+  avgCommandLatencyMs: number;
+  avgVerificationLatencyMs: number;
+  avgEffectivenessDelta: number;
+}
+
+
 
 

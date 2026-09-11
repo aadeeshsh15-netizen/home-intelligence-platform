@@ -153,6 +153,7 @@ export class PredictiveIncidentEngine {
             ...(pred.roomId ? { roomId: pred.roomId } : {}),
             incidentType: targetConfirmedType,
             startedAt: { gte: pred.createdAt, lte: currentTimestamp },
+            predictiveIncident: null,
           },
           orderBy: { startedAt: 'asc' },
         });

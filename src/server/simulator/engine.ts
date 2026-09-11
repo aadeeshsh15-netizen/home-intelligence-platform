@@ -28,6 +28,7 @@ class TelemetrySimulatorEngine {
   private isRunning: boolean = false;
   private timer: NodeJS.Timeout | null = null;
   private injectedAnomalies: Map<string, AnomalyInjection> = new Map();
+  private actuatorStates: Map<string, { action: string; active: boolean; parameters?: any }> = new Map();
 
   public injectAnomaly(anomaly: AnomalyInjection) {
     this.injectedAnomalies.set(`${anomaly.roomId}_${anomaly.type}`, anomaly);
@@ -41,6 +42,29 @@ class TelemetrySimulatorEngine {
     return Array.from(this.injectedAnomalies.values()).filter((a) => a.active);
   }
 
+  public setActuatorState(deviceId: string, action: string, active: boolean = true, parameters?: any) {
+    this.actuatorStates.set(deviceId, { action, active, parameters });
+  }
+
+  public getActuatorState(deviceId: string) {
+    return this.actuatorStates.get(deviceId);
+  }
+
+  public clearActuatorState(deviceId: string) {
+    this.actuatorStates.delete(deviceId);
+  }
+
+  public isActuatorActiveForDevices(devices: { id: string }[], actionPrefix: string): boolean {
+    for (const dev of devices) {
+      const state = this.actuatorStates.get(dev.id);
+      if (state && state.active && state.action.includes(actionPrefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+
   /**
    * Advances the physical state of the home by one simulation step and pushes readings to the ingestion pipeline.
    */
@@ -51,7 +75,9 @@ class TelemetrySimulatorEngine {
 
       const rooms = await prisma.room.findMany({
         include: {
-          sensors: true,
+          sensors: {
+            include: { device: true },
+          },
           devices: true,
         },
       });
@@ -91,6 +117,12 @@ class TelemetrySimulatorEngine {
         const hvacMode = outdoor.temperature > 22.0 ? 'COOLING' : 'HEATING';
 
         for (const sensor of room.sensors) {
+          // If sensor is attached to a physical hardware device (e.g. MQTT / ESP32),
+          // skip synthetic simulation so real telemetry remains authoritative
+          if (sensor.device?.protocol === 'MQTT') {
+            continue;
+          }
+
           const currentVal = sensor.lastReadingValue ?? 21.0;
           let nextVal = currentVal;
 
@@ -127,6 +159,11 @@ class TelemetrySimulatorEngine {
                   5
                 );
               }
+
+              // Closed-Loop: if emergency ventilation or auxiliary cooling actuator is active, reduce temperature
+              if (this.isActuatorActiveForDevices(room.devices, 'TURN_ON')) {
+                nextVal = Math.max(19.0, nextVal - 0.35);
+              }
               break;
 
             case 'HUMIDITY':
@@ -148,7 +185,9 @@ class TelemetrySimulatorEngine {
               if (co2Spike) {
                 nextVal = Math.min(2600, currentVal + 28);
               } else {
-                const ventRate = windowOpen ? 0.003 : 0.0003;
+                // Closed-Loop: if ventilation fan is active, rate increases by 20x, rapidly purging CO2
+                const ventFanActive = this.isActuatorActiveForDevices(room.devices, 'TURN_ON');
+                const ventRate = windowOpen ? 0.003 : ventFanActive ? 0.006 : 0.0003;
                 nextVal = stepRoomCO2(currentVal, isOccupied ? 2 : 0, ventRate, 5);
               }
               break;
@@ -163,6 +202,11 @@ class TelemetrySimulatorEngine {
                 basePower += 1100; // Compressor running continuously
               } else if (windowOpen) {
                 basePower += 650; // HVAC heating/cooling counter-response
+              }
+
+              // Closed-Loop: if load shedding relay is active, reduce power draw
+              if (this.isActuatorActiveForDevices(room.devices, 'SHED_LOAD')) {
+                basePower = Math.max(120, basePower - 800);
               }
               nextVal = basePower;
               break;

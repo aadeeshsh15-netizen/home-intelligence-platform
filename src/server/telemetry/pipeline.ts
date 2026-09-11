@@ -4,6 +4,8 @@ import { evaluateSensorRules, systemEventsBus } from '../event-engine/rules';
 import { evaluateTelemetryAnomaly } from '../intelligence/anomaly';
 import { CrossSensorCorrelationEngine } from '../intelligence/correlation/engine';
 import { PredictiveIncidentEngine } from '../intelligence/predictive-incidents/engine';
+import { AutomationDecisionEngine } from '../automation/engine';
+import { AutomationVerificationEngine } from '../automation/verification';
 import { SensorHealth, DeviceStatus, InsightType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
@@ -213,6 +215,16 @@ export async function processTelemetryIngest(payload: IngestTelemetryPayload): P
   // 8. Evaluate Predictive Incident Intelligence Engine
   for (const homeId of affectedHomeIds) {
     await PredictiveIncidentEngine.processIngestedBatch(homeId, new Date());
+  }
+
+  // 9. Evaluate Closed-Loop Automation Decision Engine (Phase 7)
+  for (const homeId of affectedHomeIds) {
+    await AutomationDecisionEngine.processIngestedBatch(homeId, new Date());
+  }
+
+  // 10. Verify Pending Closed-Loop Automation Interventions (Phase 7)
+  for (const homeId of affectedHomeIds) {
+    await AutomationVerificationEngine.verifyPendingExecutions(homeId, new Date());
   }
 
   return summary;
