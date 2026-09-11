@@ -1,14 +1,18 @@
-name: CI Pipeline
+name: Continuous Integration & Verification
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
-    name: Lint, Test & Build
+    name: Typecheck, Test & Build Validation
     runs-on: ubuntu-latest
 
     services:
@@ -21,38 +25,53 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
+          --health-cmd "pg_isready -U postgres -d home_intelligence_test"
+          --health-interval 5s
           --health-timeout 5s
           --health-retries 5
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js Runtime
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install Dependencies with Lockfile
         run: npm ci
 
-      - name: Generate Prisma Client
+      - name: Generate Prisma ORM Client
         run: npx prisma generate
+
+      - name: Static Type Checking
+        run: npx tsc --noEmit
+
+      - name: Initialize Test Database Schema
+        run: npx prisma db push --skip-generate
         env:
           DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/home_intelligence_test?schema=public"
 
-      - name: Push Schema to Test Database
-        run: npx prisma db push
+      - name: Seed High-Fidelity Test Baseline
+        run: npm run db:seed
         env:
           DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/home_intelligence_test?schema=public"
+          APP_SECRET: "ci-secret-key-for-automated-pipeline-testing-min-32-chars"
 
-      - name: Run Unit & Regression Tests
-        run: npm run test
+      - name: Run Automated Test Suites (35+ suites)
+        run: npm test -- --fileParallelism=false
+        env:
+          DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/home_intelligence_test?schema=public"
+          APP_SECRET: "ci-secret-key-for-automated-pipeline-testing-min-32-chars"
+          JWT_SECRET: "ci-secret-key-for-automated-pipeline-testing-min-32-chars"
+          NODE_ENV: test
 
-      - name: Build Production Next.js Bundle
+      - name: Build Production Next.js Application
         run: npm run build
         env:
           DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/home_intelligence_test?schema=public"
+          APP_SECRET: "ci-secret-key-for-automated-pipeline-testing-min-32-chars"
+          JWT_SECRET: "ci-secret-key-for-automated-pipeline-testing-min-32-chars"
+          NEXT_TELEMETRY_DISABLED: 1
