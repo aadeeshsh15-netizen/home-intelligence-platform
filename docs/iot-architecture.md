@@ -14,7 +14,7 @@ The integration of physical IoT devices adheres to four non-negotiable architect
    - The microcontroller contains **zero duplicate intelligence or anomaly logic**.
 2. **Single Authoritative Telemetry Ingestion Gateway**:
    - All physical MQTT telemetry is decoded, authenticated, and mapped by the gateway into the platform's normalized `IngestTelemetryPayload`.
-   - The telemetry is processed exclusively by the existing, authoritative [`processTelemetryIngest`](file:///c:/Users/AADEESH/OneDrive/Desktop/Home%20Intelligence%20Platform/src/server/telemetry/pipeline.ts) pipeline.
+   - The telemetry is processed exclusively by the existing, authoritative [`processTelemetryIngest`](../src/server/telemetry/pipeline.ts) pipeline.
    - The platform avoids duplicate validation pipelines.
 3. **Coexistence of Physical and Simulated Fleets**:
    - A single home can host both physical ESP32 devices (`protocol === 'MQTT'`) and virtual digital twin devices (`protocol === 'SIMULATED'`).

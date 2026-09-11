@@ -154,7 +154,7 @@ During physical breadboard testing and environmental stress tests, four real-wor
 - **Symptom**: Immediately after powering on the ESP32, the first 1 to 2 readings from the DHT22 returned `NaN`. The original draft firmware fell back to reporting synthetic values ($22.0^\circ\text{C}$ / $50\%$), contaminating historical baselines with fabricated points.
 - **Root Cause**: Capacitive polymer humidity elements require $1000\text{ms} - 2000\text{ms}$ after power application before reliable single-wire pulse timing can be resolved.
 - **Remediation**:
-  In [`firmware/src/sensor_manager.cpp`](file:///c:/Users/AADEESH/OneDrive/Desktop/Home%20Intelligence%20Platform/firmware/src/sensor_manager.cpp), added `dhtValid` boolean tracking. When `isnan(temperature)` or `isnan(humidity)` occurs, `data.dhtValid = false`. In [`firmware/src/mqtt_manager.cpp`](file:///c:/Users/AADEESH/OneDrive/Desktop/Home%20Intelligence%20Platform/firmware/src/mqtt_manager.cpp), temperature and humidity keys are omitted from the JSON payload entirely rather than sending fallback approximations:
+  In [`firmware/src/sensor_manager.cpp`](../firmware/src/sensor_manager.cpp), added `dhtValid` boolean tracking. When `isnan(temperature)` or `isnan(humidity)` occurs, `data.dhtValid = false`. In [`firmware/src/mqtt_manager.cpp`](../firmware/src/mqtt_manager.cpp), temperature and humidity keys are omitted from the JSON payload entirely rather than sending fallback approximations:
   ```cpp
   if (data.dhtValid) {
       metrics["temperature"] = serialized(String(data.temperature, 2));
@@ -166,7 +166,7 @@ During physical breadboard testing and environmental stress tests, four real-wor
 - **Symptom**: If the ESP32 connected to Wi-Fi slowly or router DHCP was delayed, SNTP time synchronization failed during `setup()`, leaving the system clock at the Unix epoch (`1970-01-01T00:00:00Z`). Ingestion security rejected all subsequent telemetry packets because their timestamps violated the $\pm 300\text{s}$ replay prevention boundary.
 - **Root Cause**: `configTime()` was only called once during initial boot. If the network link became active subsequent to that call, the time synchronization routine was never re-triggered.
 - **Remediation**:
-  In [`firmware/src/main.cpp`](file:///c:/Users/AADEESH/OneDrive/Desktop/Home%20Intelligence%20Platform/firmware/src/main.cpp), added dynamic time synchronization retries inside `loop()`:
+  In [`firmware/src/main.cpp`](../firmware/src/main.cpp), added dynamic time synchronization retries inside `loop()`:
   ```cpp
   if (WiFi.status() == WL_CONNECTED && time(nullptr) < 100000000) {
       static unsigned long lastNtpRetry = 0;
@@ -181,7 +181,7 @@ During physical breadboard testing and environmental stress tests, four real-wor
 - **Symptom**: The MQTT broker unexpectedly closed client connections every 30 seconds with TCP FIN packets.
 - **Root Cause**: The default `PubSubClient` keepalive interval is 15 seconds. The firmware heartbeat interval was configured to 30 seconds. The broker terminated the idle socket before the heartbeat was transmitted.
 - **Remediation**:
-  In [`firmware/src/mqtt_manager.cpp`](file:///c:/Users/AADEESH/OneDrive/Desktop/Home%20Intelligence%20Platform/firmware/src/mqtt_manager.cpp), explicitly set the client keepalive to 60 seconds:
+  In [`firmware/src/mqtt_manager.cpp`](../firmware/src/mqtt_manager.cpp), explicitly set the client keepalive to 60 seconds:
   ```cpp
   _mqttClient.setKeepAlive(60);
   ```
@@ -190,7 +190,7 @@ During physical breadboard testing and environmental stress tests, four real-wor
 - **Symptom**: In early ingestion tests, when an ESP32 disconnected or lost power, some telemetry monitors defaulted the missing reading to $0$. This caused spurious extreme cold anomalies ($0^\circ\text{C}$) or drop-offs in the predictive GBDT model.
 - **Root Cause**: Unsafe fallback assignment in device status updates.
 - **Remediation**:
-  In [`src/lib/services/mqtt-gateway.service.ts`](file:///c:/Users/AADEESH/OneDrive/Desktop/Home%20Intelligence%20Platform/src/lib/services/mqtt-gateway.service.ts), the watchdog timer explicitly updates device status to `STALE` (at 60s) and `OFFLINE` (at 180s) and marks sensors `SensorHealth.OFFLINE` **without modifying `lastReadingValue` or inserting a $0$ reading**. Historical continuity and baseline integrity are strictly preserved.
+  In [`src/lib/services/mqtt-gateway.service.ts`](../src/lib/services/mqtt-gateway.service.ts), the watchdog timer explicitly updates device status to `STALE` (at 60s) and `OFFLINE` (at 180s) and marks sensors `SensorHealth.OFFLINE` **without modifying `lastReadingValue` or inserting a $0$ reading**. Historical continuity and baseline integrity are strictly preserved.
 
 ---
 

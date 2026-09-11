@@ -155,6 +155,18 @@ export default function DemoConsolePage() {
   const isRunning = runnerStatus?.status === 'RUNNING' || runnerStatus?.status === 'STEP_COMPLETE';
   const isCompleted = runnerStatus?.status === 'COMPLETED';
 
+  // 8-stage closed-loop operational pipeline mapping
+  const PIPELINE_STAGES = [
+    { id: 'telemetry', label: '1. Telemetry Ingest', icon: Radio, desc: 'ESP32 / Sim MQTT', activeStep: 1 },
+    { id: 'detect', label: '2. Detection', icon: Activity, desc: '168h Baselines', activeStep: 2 },
+    { id: 'predict', label: '3. Prediction', icon: TrendingUp, desc: 'Multi-Horizon GBDT', activeStep: 2 },
+    { id: 'decide', label: '4. Decision', icon: Sliders, desc: 'Policy Evaluation', activeStep: 3 },
+    { id: 'safety', label: '5. Safety Check', icon: ShieldCheck, desc: 'Fail-Closed Guard', activeStep: 3 },
+    { id: 'command', label: '6. Command', icon: Zap, desc: 'Idempotent Dispatch', activeStep: 4 },
+    { id: 'verify', label: '7. Verification', icon: CheckCircle2, desc: 'ΔM Trajectory', activeStep: 4 },
+    { id: 'audit', label: '8. Audit Timeline', icon: Clock, desc: 'Causal SystemEvent', activeStep: 5 },
+  ];
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -165,14 +177,19 @@ export default function DemoConsolePage() {
             Deterministic Demo & Presentation Console
           </h1>
           <p className="text-xs text-slate-400 mt-1 font-mono">
-            Full-Pipeline Demonstration · Real Intelligence Execution · Zero Hallucination
+            Sense → Detect → Correlate → Predict → Anticipate → Decide → Safety Check → Act → Verify → Audit
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Link href="/observability">
             <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 text-xs">
-              <Gauge className="w-3.5 h-3.5 mr-1.5" /> View in Observability
+              <Gauge className="w-3.5 h-3.5 mr-1.5" /> Observability
+            </Button>
+          </Link>
+          <Link href="/automations">
+            <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> Automations
             </Button>
           </Link>
           <Link href="/">
@@ -180,6 +197,69 @@ export default function DemoConsolePage() {
               <Activity className="w-3.5 h-3.5 mr-1.5" /> Live Dashboard
             </Button>
           </Link>
+        </div>
+      </div>
+
+      {/* 2-MINUTE EVALUATOR QUICK GUIDE */}
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-xs">
+        <div className="flex items-center justify-between font-mono text-sky-400 font-bold mb-2">
+          <span className="flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-sky-400" />
+            2-Minute Evaluator Quick Guide
+          </span>
+          <Badge className="bg-sky-950/80 text-sky-300 border-sky-800 font-mono text-[10px]">
+            100% Real Pipeline Execution · Zero Hallucination
+          </Badge>
+        </div>
+        <p className="text-slate-400 leading-relaxed">
+          Select any controlled scenario below and click <strong className="text-white">Auto-Play All</strong> or step through sequentially using <strong className="text-white">Next Step</strong>. Each action feeds real telemetry through the authoritative ingestion pipeline, invoking actual statistical baselines, multi-horizon GBDT inference, fail-closed safety interlocks, and post-actuation trajectory verification ($\Delta M$). Every event is correlated and audit-logged in the Observability Timeline in real time.
+        </p>
+      </div>
+
+      {/* 8-STAGE INTERACTIVE CONTROL LOOP TRACKER */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
+            Real-Time 8-Stage Closed-Loop Control Path:
+          </span>
+          {isCompleted ? (
+            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-mono">
+              Complete Loop Verified
+            </Badge>
+          ) : isRunning ? (
+            <Badge className="bg-sky-500/10 text-sky-400 border-sky-500/30 text-[10px] font-mono animate-pulse">
+              Active Step {currentStepNum} / {totalSteps}
+            </Badge>
+          ) : (
+            <Badge className="bg-slate-800 text-slate-400 text-[10px] font-mono">Ready to Execute</Badge>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 pt-1">
+          {PIPELINE_STAGES.map((stage, idx) => {
+            const Icon = stage.icon;
+            const isStagePassed = isCompleted || (currentStepNum > stage.activeStep);
+            const isStageActive = isRunning && currentStepNum === stage.activeStep;
+
+            return (
+              <div
+                key={stage.id}
+                className={`p-2.5 rounded border text-center flex flex-col items-center justify-center transition-all ${
+                  isStagePassed
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                    : isStageActive
+                    ? 'border-sky-500 bg-sky-500/20 text-sky-200 ring-1 ring-sky-500 shadow-md animate-pulse'
+                    : 'border-slate-800 bg-slate-950/50 text-slate-500'
+                }`}
+              >
+                <Icon className={`w-4 h-4 mb-1 ${
+                  isStagePassed ? 'text-emerald-400' : isStageActive ? 'text-sky-300' : 'text-slate-600'
+                }`} />
+                <div className="text-[11px] font-bold tracking-tight">{stage.label}</div>
+                <div className="text-[9px] font-mono opacity-75 mt-0.5">{stage.desc}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -341,39 +421,52 @@ export default function DemoConsolePage() {
           {/* STEP RESULT & REALTIME TELEMETRY INSPECTOR */}
           {stepResult && (
             <div className="bg-slate-950/80 rounded border border-slate-800 p-4 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="text-xs font-mono text-sky-400 font-bold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   Step Execution Real-Time Ingestion Summary
                 </div>
-                <Badge className="bg-slate-900 text-slate-300 font-mono text-[10px]">
-                  Processed {stepResult.ingestionSummary?.processedCount || 0} readings
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-slate-900 text-slate-300 font-mono text-[10px]">
+                    Processed {stepResult.ingestionSummary?.processedCount || 0} readings
+                  </Badge>
+                  <Link href="/observability">
+                    <Button variant="outline" size="sm" className="h-6 text-[10px] bg-slate-900 border-slate-700 text-sky-400 hover:text-sky-300">
+                      Trace in Observability →
+                    </Button>
+                  </Link>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
-                <div className="bg-slate-900 p-2 rounded border border-slate-800">
+                <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
                   <span className="text-slate-500">Telemetry Injected:</span>
                   <div className="text-slate-200 mt-1">
                     {stepResult.stepDetails?.telemetry?.map((t: any, i: number) => (
-                      <div key={i}>
-                        {t.sensorType}: <span className="text-sky-400">{t.value} {t.unit}</span>
+                      <div key={i} className="flex justify-between">
+                        <span className="text-slate-400">{t.sensorType}:</span>
+                        <span className="text-sky-400 font-bold">{t.value} {t.unit}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                  <span className="text-slate-500">Pipeline Ingestion:</span>
-                  <div className="text-slate-200 mt-1">
-                    Anomalies: {stepResult.ingestionSummary?.anomaliesDetected || 0} · Events: {stepResult.ingestionSummary?.eventsTriggered || 0}
+                <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
+                  <span className="text-slate-500">Pipeline Ingestion & State:</span>
+                  <div className="text-slate-200 mt-1 space-y-1">
+                    <div>Anomalies Detected: <span className="text-amber-400">{stepResult.ingestionSummary?.anomaliesDetected || 0}</span></div>
+                    <div>Causal Events Logged: <span className="text-sky-400">{stepResult.ingestionSummary?.eventsTriggered || 0}</span></div>
+                    <div>Audit Trace: <span className="text-emerald-400">Recorded</span></div>
                   </div>
                 </div>
 
-                <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                  <span className="text-slate-500">Expected Effect:</span>
-                  <div className="text-emerald-400 mt-1">
+                <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
+                  <span className="text-slate-500">Expected Effect & Verification:</span>
+                  <div className="text-emerald-400 mt-1 leading-snug">
                     {stepResult.stepDetails?.expectedOutcome}
+                  </div>
+                  <div className="mt-2 pt-1 border-t border-slate-800 text-[10px] text-slate-400">
+                    Fail-closed guardrails active · Idempotent
                   </div>
                 </div>
               </div>

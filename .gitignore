@@ -4,29 +4,65 @@
 .pnp.js
 .yarn/install-state.gz
 
-# testing
+# testing & coverage
 /coverage
 
-# next.js
+# next.js build artifacts
 /.next/
 /out/
 
-# production
+# production artifacts
 /build
 
-# misc
-.DS_Store
-*.pem
+# runtime databases & sqlite files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+prisma/dev.db
+prisma/dev.db-journal
+prisma/test.db
+prisma/test.db-journal
 
-# debug
+# database dumps & backups
+*.dump
+*.sql.bak
+*.bak
+
+# container volume directories
+postgres_data/
+mosquitto_data/
+
+# platformio & firmware build artifacts
+firmware/.pio/
+firmware/.vscode/
+
+# logs & debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# environment variables
 .env
 .env*.local
+!.env.example
 
-# typescript
+# security & secrets
+*.pem
+*.key
+*.cert
+*.crt
+
+# temporary & agent workspaces
+scratch/
+.gemini/
+
+# typescript build cache
 *.tsbuildinfo
 next-env.d.ts
+
+# OS metadata
+.DS_Store
+Thumbs.db
