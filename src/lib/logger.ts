@@ -1,7 +1,8 @@
 /**
  * Structured Application Logger
  * Provides consistent JSON or formatted logging with severity levels,
- * contextual metadata (correlationId, sensorId, roomId, etc.), and sensitive data redaction.
+ * contextual metadata (correlationId, entityId, component, eventType, etc.),
+ * and automatic sensitive data redaction.
  */
 
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
@@ -17,28 +18,48 @@ const CURRENT_LOG_LEVEL: LogLevel =
   (process.env.LOG_LEVEL as LogLevel) ||
   (process.env.NODE_ENV === 'production' ? 'INFO' : 'DEBUG');
 
-const SENSITIVE_KEYS = new Set([
+export const SENSITIVE_KEYS = new Set([
   'password',
   'passwordhash',
   'secret',
   'token',
+  'authtoken',
   'authorization',
   'cookie',
   'apikey',
+  'bearer',
+  'auth',
+  'privatekey',
+  'devicekey',
+  'credential',
+  'passphrase',
+  'jwt',
 ]);
 
-function redactSensitive(obj: any): any {
-  if (!obj || typeof obj !== 'object') return obj;
+/**
+ * Deeply sanitizes an object or string, redacting sensitive credentials and keys.
+ */
+export function redactSensitive(obj: any): any {
+  if (!obj) return obj;
+  if (typeof obj === 'string') {
+    // Redact bearer tokens or authorization patterns in raw strings
+    if (/bearer\s+[a-zA-Z0-9_\-\.]+/i.test(obj)) {
+      return obj.replace(/bearer\s+[a-zA-Z0-9_\-\.]+/gi, 'Bearer [REDACTED]');
+    }
+    return obj;
+  }
+  if (typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(redactSensitive);
 
   const cleaned: Record<string, any> = {};
   for (const [key, val] of Object.entries(obj)) {
-    if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+    const lowerKey = key.toLowerCase();
+    if (SENSITIVE_KEYS.has(lowerKey) || lowerKey.includes('secret') || lowerKey.includes('password')) {
       cleaned[key] = '[REDACTED]';
     } else if (val && typeof val === 'object') {
       cleaned[key] = redactSensitive(val);
     } else {
-      cleaned[key] = val;
+      cleaned[key] = typeof val === 'string' ? redactSensitive(val) : val;
     }
   }
   return cleaned;
@@ -46,22 +67,28 @@ function redactSensitive(obj: any): any {
 
 export interface LogContext {
   module?: string;
+  component?: string;
   source?: string;
   homeId?: string;
   roomId?: string;
   sensorId?: string;
   deviceId?: string;
+  entityId?: string;
+  eventType?: string;
   correlationId?: string;
   latencyMs?: number;
   [key: string]: any;
 }
 
-class StructuredLogger {
-  private formatLog(level: LogLevel, message: string, context?: LogContext, error?: Error): string {
+export class StructuredLogger {
+  public formatLog(level: LogLevel, message: string, context?: LogContext, error?: Error): string {
     const timestamp = new Date().toISOString();
+    const component = context?.component || context?.module || 'system';
+
     const payload: Record<string, any> = {
       timestamp,
       level,
+      component,
       message,
       ...(context ? redactSensitive(context) : {}),
     };
@@ -70,7 +97,7 @@ class StructuredLogger {
       payload.error = {
         name: error.name,
         message: error.message,
-        stack: error.stack?.split('\n').slice(0, 4).join('\n'),
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack?.split('\n').slice(0, 4).join('\n'),
       };
     }
 
@@ -79,7 +106,7 @@ class StructuredLogger {
     }
 
     // High readability terminal output for local development
-    const mod = context?.module ? `[${context.module}] ` : '';
+    const mod = component ? `[${component}] ` : '';
     const meta = context && Object.keys(context).length > 0 ? ` ${JSON.stringify(redactSensitive(context))}` : '';
     const err = error ? `\n  Error: ${error.message}` : '';
     return `[${timestamp.substring(11, 19)}] [${level}] ${mod}${message}${meta}${err}`;
