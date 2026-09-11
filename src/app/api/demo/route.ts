@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { demoRunner } from '@/server/demo/runner';
+import { enforceRateLimit } from '@/server/middleware/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const rateLimitResponse = enforceRateLimit(req, 'DEMO');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await req.json();
     const { action, scenarioId, homeId, stepDelayMs } = body;

@@ -6,6 +6,7 @@ import { ActuatorActionEnum } from '@/domain/command.schema';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { AutomationStatus, VerificationStatus } from '@prisma/client';
+import { enforceRateLimit } from '@/server/middleware/rate-limiter';
 
 const ManualCommandSchema = z.object({
   deviceId: z.string().min(1, 'deviceId is required'),
@@ -16,6 +17,9 @@ const ManualCommandSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const rateLimitResponse = enforceRateLimit(req, 'COMMANDS');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const auth = await enforceHomeAccess(req);
     if (!auth.authorized || !auth.user) {

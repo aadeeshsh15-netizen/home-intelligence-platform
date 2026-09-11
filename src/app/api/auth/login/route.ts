@@ -3,8 +3,12 @@ import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { generateSessionToken } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { enforceRateLimit } from '@/server/middleware/rate-limiter';
 
 export async function POST(req: NextRequest) {
+  const rateLimitResponse = enforceRateLimit(req, 'AUTH');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await req.json();
     const { email, password } = body;

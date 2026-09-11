@@ -5,6 +5,7 @@ import { DeviceProvisioningRequestSchema } from '@/domain/mqtt.schema';
 import { generateDeviceToken, hashDeviceToken, generateFirmwareConfigSnippet } from '@/server/iot/device-auth';
 import { DeviceProtocol, DeviceStatus, ProvisioningStatus, SensorType } from '@prisma/client';
 import { logger } from '@/lib/logger';
+import { enforceRateLimit } from '@/server/middleware/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,9 @@ function getDefaultSensorMeta(type: SensorType): { unit: string; min: number; ma
 }
 
 export async function POST(req: NextRequest) {
+  const rateLimitResponse = enforceRateLimit(req, 'PROVISION');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const auth = await enforceHomeAccess(req);
     if (!auth.authorized || !auth.user) {
