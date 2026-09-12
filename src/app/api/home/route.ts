@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { SensorType, EventStatus, SensorHealth, DeviceStatus } from '@prisma/client';
 import { enforceHomeAccess } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { UpdateHomeSchema } from '@/domain/home.schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,3 +128,73 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const auth = await enforceHomeAccess(req);
+    if (!auth.authorized || !auth.user) {
+      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status || 401 });
+    }
+
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 });
+    }
+
+    const validation = UpdateHomeSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validation.error.errors.map((e) => e.message).join(', '),
+        },
+        { status: 400 }
+      );
+    }
+
+    const updatedHome = await prisma.home.update({
+      where: { id: auth.user.homeId },
+      data: { name: validation.data.name },
+      include: {
+        floors: {
+          include: {
+            rooms: {
+              include: {
+                sensors: true,
+                devices: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    logger.info('Home name updated successfully', {
+      homeId: auth.user.homeId,
+      newName: updatedHome.name,
+      module: 'api/home',
+    });
+
+    const allRooms = updatedHome.floors.flatMap((f) => f.rooms);
+    const allSensors = allRooms.flatMap((r) => r.sensors);
+    const allDevices = allRooms.flatMap((r) => r.devices);
+
+    return NextResponse.json({
+      home: {
+        id: updatedHome.id,
+        name: updatedHome.name,
+        timezone: updatedHome.timezone,
+        address: updatedHome.address,
+        totalFloors: updatedHome.floors.length,
+        totalRooms: allRooms.length,
+        totalDevices: allDevices.length,
+        totalSensors: allSensors.length,
+        updatedAt: updatedHome.updatedAt,
+      },
+    });
+  } catch (error: any) {
+    logger.error('API /home PATCH failure', { module: 'api/home' }, error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

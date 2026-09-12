@@ -3,6 +3,7 @@ import './globals.css';
 import { Sidebar } from '@/components/navigation/Sidebar';
 import { TopBar } from '@/components/navigation/TopBar';
 import { ThemeProvider } from '@/lib/theme';
+import { HomeProvider } from '@/lib/home-context';
 
 export const metadata: Metadata = {
   title: 'Home Intelligence Platform | Telemetry & Anomaly Analysis',
@@ -45,13 +46,15 @@ export default function RootLayout({
       </head>
       <body className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex min-h-screen transition-colors duration-150">
         <ThemeProvider>
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0">
-            <TopBar />
-            <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-[1600px] w-full mx-auto">
-              {children}
-            </main>
-          </div>
+          <HomeProvider>
+            <Sidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <TopBar />
+              <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-[1600px] w-full mx-auto">
+                {children}
+              </main>
+            </div>
+          </HomeProvider>
         </ThemeProvider>
       </body>
     </html>

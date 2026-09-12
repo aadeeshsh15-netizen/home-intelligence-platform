@@ -42,7 +42,7 @@ async function main() {
   // 2. Create Home
   const home = await prisma.home.create({
     data: {
-      name: 'Apex Horizon Digital Residence',
+      name: 'Apex Horizon Estate',
       timezone: 'America/New_York',
       address: '742 Evergreen Terrace, Sector 4',
       ownerId: user.id,

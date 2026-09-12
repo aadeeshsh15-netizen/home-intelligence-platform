@@ -1,19 +1,66 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRealtimeTelemetry } from '@/lib/useRealtimeTelemetry';
 import { useTheme } from '@/lib/theme';
+import { useHome } from '@/lib/home-context';
 import { Button } from '../ui/button';
-import { RefreshCw, Radio, Sun, Moon, ChevronDown, Search } from 'lucide-react';
+import { RefreshCw, Radio, Sun, Moon, ChevronDown, Search, Edit2, Check, X, Building2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 
 export function TopBar() {
   const { connectionState, lastTick, lastHeartbeat } = useRealtimeTelemetry();
   const { theme, setTheme } = useTheme();
+  const { homeName, stats, updateHomeName, isSaving } = useHome();
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [isTicking, setIsTicking] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+
+  const [isEstateOpen, setIsEstateOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+  const estateRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (estateRef.current && !estateRef.current.contains(event.target as Node)) {
+        setIsEstateOpen(false);
+        setIsEditing(false);
+        setEditError(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleStartEdit = () => {
+    setEditName(homeName);
+    setIsEditing(true);
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async () => {
+    const res = await updateHomeName(editName);
+    if (res.success) {
+      setIsEditing(false);
+      setEditError(null);
+    } else {
+      setEditError(res.error || 'Failed to save');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsEditing(false);
+      setEditError(null);
+    }
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -64,14 +111,124 @@ export function TopBar() {
     <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-20 transition-colors">
       {/* Left: Estate Identifier */}
       <div className="flex items-center gap-6">
-        <div>
-          <button className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group">
-            <span>Apex Horizon Estate</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+        <div className="relative" ref={estateRef}>
+          <button
+            onClick={() => setIsEstateOpen((prev) => !prev)}
+            aria-expanded={isEstateOpen}
+            className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group"
+          >
+            <span>{homeName}</span>
+            <ChevronDown className={clsx("w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-transform", isEstateOpen && "rotate-180")} />
           </button>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-            Model 2 • 2 Floors • 7 Rooms • 28 Sensors
+            Model 2 • {stats.totalFloors} Floors • {stats.totalRooms} Rooms • {stats.totalSensors} Sensors
           </p>
+
+          {/* Estate Popover Dropdown */}
+          {isEstateOpen && (
+            <div className="absolute left-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg p-4 z-50 animate-in fade-in zoom-in-95 duration-100">
+              <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                  Home Identity
+                </span>
+                {!isEditing && (
+                  <button
+                    onClick={handleStartEdit}
+                    className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    Rename
+                  </button>
+                )}
+              </div>
+
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    maxLength={64}
+                    placeholder="Enter home name..."
+                    className="w-full text-xs font-medium px-2.5 py-1.5 rounded-lg border border-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  {editError && (
+                    <div className="text-[11px] text-rose-500 font-medium">{editError}</div>
+                  )}
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditError(null);
+                      }}
+                      className="text-xs h-7 px-2"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSaveEdit}
+                      disabled={isSaving}
+                      className="text-xs h-7 px-3 bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {isSaving ? (
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                      ) : (
+                        'Save'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                      {homeName}
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                      Active Cyber-Physical Residence
+                    </div>
+                  </div>
+
+                  {/* Supporting Stats */}
+                  <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+                    <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">FLOORS</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">{stats.totalFloors} Levels</span>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">ROOMS</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">{stats.totalRooms} Zones</span>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">SENSORS</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">{stats.totalSensors} Monitored</span>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">DEVICES</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">{stats.totalDevices} Hardware</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <Link
+                      href="/home-view"
+                      onClick={() => setIsEstateOpen(false)}
+                      className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                      <span>Full Home Settings</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Center: Search box */}

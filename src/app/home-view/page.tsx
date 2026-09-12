@@ -8,6 +8,7 @@ import { useRealtimeTelemetry, TelemetryTick } from '@/lib/useRealtimeTelemetry'
 import { formatMetricValue, formatRelativeTime } from '@/lib/formatters';
 import Link from 'next/link';
 import { useTheme } from '@/lib/theme';
+import { useHome } from '@/lib/home-context';
 import {
   Layers,
   Thermometer,
@@ -18,14 +19,36 @@ import {
   ArrowRight,
   Cpu,
   Radio,
+  Building2,
+  Edit2,
+  Check,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function HomeViewPage() {
+  const { homeName, stats, updateHomeName, isSaving } = useHome();
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputName, setInputName] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   const [floors, setFloors] = useState<any[]>([]);
   const [selectedFloorIndex, setSelectedFloorIndex] = useState(0);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
+
+  const handleSave = async () => {
+    const res = await updateHomeName(inputName);
+    if (res.success) {
+      setIsEditing(false);
+      setEditError(null);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } else {
+      setEditError(res.error || 'Failed to save');
+    }
+  };
 
   // Live telemetry updates handler
   const handleTick = useCallback((tick: TelemetryTick) => {
@@ -74,21 +97,117 @@ export default function HomeViewPage() {
     loadFloors();
   }, []);
 
-  if (loading || floors.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 font-mono text-sm text-slate-500 animate-pulse">
-        Rendering architectural floor-plan schematic...
-      </div>
-    );
-  }
-
   const activeFloor = floors[selectedFloorIndex];
-  const selectedRoom = activeFloor?.rooms.find((r: any) => r.id === selectedRoomId) || activeFloor?.rooms[0];
+  const selectedRoom = activeFloor?.rooms?.find((r: any) => r.id === selectedRoomId) || activeFloor?.rooms?.[0];
 
   return (
     <div className="space-y-6">
-      {/* Header & Floor Switcher */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+      {/* HOME IDENTITY & SETTINGS CARD */}
+      <div id="identity" className="bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                Home Identity
+              </span>
+              {saveSuccess && (
+                <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1 animate-in fade-in duration-200">
+                  <Check className="w-3 h-3" /> Saved
+                </span>
+              )}
+            </div>
+
+            {isEditing ? (
+              <div className="pt-1 space-y-2 max-w-md">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={inputName}
+                    onChange={(e) => setInputName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSave();
+                      } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setIsEditing(false);
+                        setEditError(null);
+                      }
+                    }}
+                    autoFocus
+                    maxLength={64}
+                    placeholder="Enter home name (e.g. Sharma Residence)..."
+                    className="text-sm font-medium px-3 py-1.5 rounded-lg border border-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-full"
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditError(null);
+                    }}
+                    className="text-xs h-8 px-2.5"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="text-xs h-8 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  >
+                    {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
+                  </Button>
+                </div>
+                {editError && (
+                  <p className="text-[11px] font-mono text-rose-500 font-medium">
+                    {editError}
+                  </p>
+                )}
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                  Press Enter to save • Escape to cancel • 1-64 characters
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 pt-0.5">
+                <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {homeName}
+                </span>
+                <button
+                  onClick={() => {
+                    setInputName(homeName);
+                    setIsEditing(true);
+                    setEditError(null);
+                  }}
+                  className="text-xs font-mono text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 cursor-pointer hover:underline"
+                >
+                  <Edit2 className="w-3 h-3" />
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Supporting Information (2 Floors · 7 Rooms · 28 Sensors) */}
+          <div className="flex items-center gap-2 sm:gap-3 text-xs font-mono text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 rounded-lg px-3 py-2 shrink-0">
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{stats.totalFloors} Floors</span>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{stats.totalRooms} Rooms</span>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{stats.totalSensors} Sensors</span>
+          </div>
+        </div>
+      </div>
+
+      {loading || floors.length === 0 ? (
+        <div className="flex items-center justify-center h-64 font-mono text-sm text-slate-500 animate-pulse bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl">
+          Rendering architectural floor-plan schematic...
+        </div>
+      ) : (
+        <>
+          {/* Header & Floor Switcher */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Interactive Home View</h1>
@@ -382,6 +501,8 @@ export default function HomeViewPage() {
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

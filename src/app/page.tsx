@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRealtimeTelemetry, TelemetryTick } from '@/lib/useRealtimeTelemetry';
+import { useHome } from '@/lib/home-context';
 import {
   RefreshCw,
   ArrowUpRight,
@@ -96,6 +97,7 @@ const DEFAULT_HOME = {
 };
 
 export default function OperationalInstrumentPage() {
+  const { homeName, stats } = useHome();
   const [refreshing, setRefreshing] = useState(false);
   const [observabilityData, setObservabilityData] = useState<any>(DEFAULT_OBSERVABILITY);
   const [homeData, setHomeData] = useState<any>(DEFAULT_HOME);
@@ -194,6 +196,15 @@ export default function OperationalInstrumentPage() {
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    {homeName || homeData?.home?.name || 'Apex Horizon Estate'}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-700">·</span>
+                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                    {stats.totalFloors} Floors · {stats.totalRooms} Rooms · {stats.totalSensors} Sensors
+                  </span>
+                </div>
                 <div className="text-[11px] font-mono uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold mb-2">
                   SYSTEM STATUS
                 </div>
@@ -235,8 +246,8 @@ export default function OperationalInstrumentPage() {
                   <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                     Clear • 28°C
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Apex Horizon Estate
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[140px]">
+                    {homeName || homeData?.home?.name || 'Apex Horizon Estate'}
                   </div>
                 </div>
               </div>
