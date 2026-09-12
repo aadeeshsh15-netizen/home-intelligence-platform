@@ -60,8 +60,11 @@ const navSections = [
   },
 ];
 
+import { useHome } from '@/lib/home-context';
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { homeName } = useHome();
 
   return (
     <aside className="w-60 border-r border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-950 flex flex-col justify-between shrink-0 h-screen sticky top-0 select-none transition-colors duration-150">
@@ -116,19 +119,26 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Reference 1 bottom status card */}
+      {/* Reference bottom card with estate thumbnail */}
       <div className="p-3 border-t border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-950 transition-colors">
-        <div className="p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 space-y-0.5">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">System Online</span>
+        <div className="p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0 border border-slate-300 dark:border-slate-700">
+            <img src="/images/estate-thumbnail.jpg" alt="Estate" className="w-full h-full object-cover" />
           </div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 pl-4">
-            All services operational
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+              {homeName}
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Online</span>
+              <span className="text-slate-400 dark:text-slate-500 text-[9px]">· Operational</span>
+            </div>
           </div>
         </div>
-        <div className="pt-2 text-[10px] font-mono text-slate-400 dark:text-slate-500 px-1 leading-tight">
-          <span>v1.0.0</span> · <span>Built for a safer, smarter home</span>
+        <div className="pt-2 text-[10px] font-mono text-slate-400 dark:text-slate-500 px-1 leading-tight flex items-center justify-between">
+          <span className="italic truncate mr-2">"A safer home a brighter tomorrow."</span>
+          <span className="shrink-0">v1.0.0</span>
         </div>
       </div>
     </aside>

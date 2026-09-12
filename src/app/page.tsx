@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRealtimeTelemetry, TelemetryTick } from '@/lib/useRealtimeTelemetry';
 import { useHome } from '@/lib/home-context';
+import { useTheme } from '@/lib/theme';
 import {
   RefreshCw,
-  ArrowUpRight,
   Eye,
   Zap,
   CheckCircle2,
@@ -23,8 +23,30 @@ import {
   Sun,
   Activity,
   ChevronRight,
+  DoorOpen,
+  LineChart as LineChartIcon,
+  Maximize2,
+  Compass,
+  ZoomIn,
+  ZoomOut,
+  Droplets,
+  ExternalLink,
+  Laptop,
+  UtensilsCrossed,
+  Armchair,
+  BedDouble,
+  Check,
   Users,
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
 
 const DEFAULT_OBSERVABILITY = {
   health: {
@@ -74,7 +96,7 @@ const DEFAULT_OBSERVABILITY = {
       severity: 'INFO',
       title: 'Automation evaluated',
       summary: 'Ventilation policy • No intervention required',
-      color: 'gray',
+      color: 'blue',
     },
     {
       id: 'evt-5',
@@ -96,21 +118,84 @@ const DEFAULT_HOME = {
   occupancy: { isHomeOccupied: true, occupiedRoomsCount: 2 },
 };
 
+// Historical trends baseline points
+const TRENDS_DATA_24H = [
+  { time: '00:00', temp: 21.8, co2: 510, humidity: 48, power: 0.82 },
+  { time: '04:00', temp: 21.2, co2: 490, humidity: 52, power: 0.74 },
+  { time: '08:00', temp: 22.6, co2: 580, humidity: 46, power: 1.65 },
+  { time: '12:00', temp: 24.5, co2: 630, humidity: 44, power: 1.42 },
+  { time: '16:00', temp: 25.1, co2: 605, humidity: 45, power: 1.35 },
+  { time: '20:00', temp: 24.2, co2: 612, humidity: 46, power: 1.24 },
+];
+
+const TRENDS_DATA_7D = [
+  { time: 'Mon', temp: 23.4, co2: 540, humidity: 47, power: 1.15 },
+  { time: 'Tue', temp: 23.8, co2: 580, humidity: 49, power: 1.22 },
+  { time: 'Wed', temp: 24.1, co2: 610, humidity: 45, power: 1.30 },
+  { time: 'Thu', temp: 24.2, co2: 612, humidity: 46, power: 1.24 },
+  { time: 'Fri', temp: 24.6, co2: 625, humidity: 44, power: 1.41 },
+  { time: 'Sat', temp: 24.9, co2: 640, humidity: 43, power: 1.55 },
+  { time: 'Sun', temp: 24.0, co2: 590, humidity: 46, power: 1.28 },
+];
+
+const TRENDS_DATA_30D = [
+  { time: 'W1', temp: 23.2, co2: 530, humidity: 48, power: 1.18 },
+  { time: 'W2', temp: 23.7, co2: 565, humidity: 47, power: 1.25 },
+  { time: 'W3', temp: 24.0, co2: 595, humidity: 46, power: 1.28 },
+  { time: 'W4', temp: 24.2, co2: 612, humidity: 46, power: 1.24 },
+];
+
 export default function OperationalInstrumentPage() {
   const { homeName, stats } = useHome();
+  const { isDark } = useTheme();
+
   const [refreshing, setRefreshing] = useState(false);
   const [observabilityData, setObservabilityData] = useState<any>(DEFAULT_OBSERVABILITY);
   const [homeData, setHomeData] = useState<any>(DEFAULT_HOME);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [predictiveIncidents, setPredictiveIncidents] = useState<any[]>([]);
   const [automations, setAutomations] = useState<any>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
-  const [activeFloor, setActiveFloor] = useState<'Floor 1' | 'Floor 2'>('Floor 1');
   const [secondsAgo, setSecondsAgo] = useState(12);
   const [mounted, setMounted] = useState(false);
 
+  // Digital Twin Floor Plan Interactive Controls
+  const [activeFloor, setActiveFloor] = useState<'Ground Floor' | 'First Floor'>('Ground Floor');
+  const [activeLayer, setActiveLayer] = useState<'Temperature' | 'CO₂' | 'Occupancy' | 'Power'>('Temperature');
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [selectedRoom, setSelectedRoom] = useState<string | null>('Living Room');
+  const [trendsRange, setTrendsRange] = useState<'24H' | '7D' | '30D'>('24H');
+  const [currentTime, setCurrentTime] = useState({ date: '', time: '', greeting: 'Good Day' });
+
   useEffect(() => {
     setMounted(true);
+
+    const updateClock = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      let greeting = 'Good Day';
+      if (hour >= 5 && hour < 12) greeting = 'Good Morning';
+      else if (hour >= 12 && hour < 18) greeting = 'Good Afternoon';
+      else greeting = 'Good Evening';
+
+      const dateStr = now.toLocaleDateString('en-US', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+
+      setCurrentTime({ date: dateStr, time: timeStr, greeting });
+    };
+
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleTick = useCallback((tick: TelemetryTick) => {
@@ -148,7 +233,6 @@ export default function OperationalInstrumentPage() {
         setPredictiveIncidents(d.predictiveIncidents || []);
       }
       if (autoRes.ok) setAutomations(await autoRes.json());
-      setLastSyncTime(new Date());
       setSecondsAgo(2);
     } catch (e) {
       console.error('Failed to fetch operational dashboard data:', e);
@@ -159,636 +243,801 @@ export default function OperationalInstrumentPage() {
 
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 10000);
+    const interval = setInterval(fetchDashboardData, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const health = observabilityData?.health;
+  const health = observabilityData?.health || DEFAULT_OBSERVABILITY.health;
   const status = health?.status || 'HEALTHY';
-  const fleet = health?.fleet || { totalDevices: 7, onlineCount: 6, staleCount: 0, offlineCount: 1 };
-  const recentEvents = observabilityData?.recentEvents?.length > 0 ? observabilityData.recentEvents : DEFAULT_OBSERVABILITY.recentEvents;
-  const dbSubsystem = health?.subsystems?.database;
-  const mqttSubsystem = health?.subsystems?.mqtt_gateway;
+  const climate = homeData?.climate || DEFAULT_HOME.climate;
+  const energy = homeData?.energy || DEFAULT_HOME.energy;
+  const fleet = health?.fleet || DEFAULT_OBSERVABILITY.health.fleet;
+  const recentEvents = observabilityData?.recentEvents?.length > 0
+    ? observabilityData.recentEvents
+    : DEFAULT_OBSERVABILITY.recentEvents;
 
-  const climate = homeData?.climate || {};
-  const energy = homeData?.energy || {};
-  const activePredictions = predictiveIncidents.filter(
-    (p) => p.status === 'PREDICTED' || p.status === 'CONFIRMED'
-  );
-  const primaryPrediction = activePredictions[0] || null;
+  // Active prediction status
+  const activePred = predictiveIncidents.find((p) => p.status === 'PREDICTED') || null;
 
-  const executions = automations?.history || automations?.executions || [];
-  const latestExecution = executions[0] || null;
-  const armedPolicies = automations?.policies || [];
+  // Active automation status
+  const activeExec = automations?.recentExecutions?.[0] || null;
+  const activePolicies = automations?.policies || [];
+
+  // Hotspots definitions mapped to 3D floor plan layout
+  const roomHotspots = useMemo(() => [
+    {
+      id: 'bedroom',
+      name: 'Bedroom',
+      top: '26%',
+      left: '42%',
+      temp: '22.1°C',
+      co2: '480 ppm',
+      occupancy: 'Occupied',
+      power: '85 W',
+      status: 'normal',
+      icon: BedDouble,
+    },
+    {
+      id: 'living-room',
+      name: 'Living Room',
+      top: '46%',
+      left: '44%',
+      temp: `${climate.avgTemperature ?? 24.2}°C`,
+      co2: `${climate.avgCO2 ?? 612} ppm`,
+      occupancy: 'Occupied',
+      power: `${((energy.currentTotalWatts ?? 1240) * 0.45).toFixed(0)} W`,
+      status: 'active',
+      icon: Armchair,
+    },
+    {
+      id: 'kitchen',
+      name: 'Kitchen',
+      top: '36%',
+      left: '74%',
+      temp: '24.6°C',
+      co2: '580 ppm',
+      occupancy: 'Vacant',
+      power: '420 W',
+      status: 'warm',
+      icon: UtensilsCrossed,
+    },
+    {
+      id: 'study',
+      name: 'Study',
+      top: '68%',
+      left: '58%',
+      temp: '20.1°C',
+      co2: '440 ppm',
+      occupancy: 'Vacant',
+      power: '120 W',
+      status: 'cool',
+      icon: Laptop,
+    },
+  ], [climate, energy]);
+
+  const trendsChartData = useMemo(() => {
+    if (trendsRange === '7D') return TRENDS_DATA_7D;
+    if (trendsRange === '30D') return TRENDS_DATA_30D;
+    return TRENDS_DATA_24H;
+  }, [trendsRange]);
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 transition-colors duration-150">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-12">
       {/* ==================================================
-          SECTION 1: TWO-COLUMN MAIN WORKSPACE (col-span-8 / col-span-4)
+          SECTION A: ATMOSPHERIC HERO HEADER BANNER
           ================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT COLUMN: System Status, Telemetry Metrics, Intelligence, Automations */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* SYSTEM STATUS BANNER */}
-          <section className="bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-6 sm:p-7 relative overflow-hidden shadow-xs">
-            {/* Subtle light background tint */}
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-sky-500/5 dark:from-emerald-950/20 dark:via-slate-900/30 dark:to-transparent pointer-events-none" />
+      <section className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm min-h-[190px] flex items-center bg-slate-900">
+        {/* Architectural Dusk Villa Photograph */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url('/images/hero-villa.jpg')` }}
+        />
 
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    {homeName || homeData?.home?.name || 'Apex Horizon Estate'}
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-700">·</span>
-                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                    {stats.totalFloors} Floors · {stats.totalRooms} Rooms · {stats.totalSensors} Sensors
-                  </span>
-                </div>
-                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold mb-2">
-                  SYSTEM STATUS
-                </div>
-                <h1
-                  className={`text-4xl sm:text-5xl md:text-6xl font-black tracking-tight font-sans ${
-                    status === 'HEALTHY'
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : status === 'DEGRADED'
-                      ? 'text-amber-600 dark:text-amber-400'
-                      : 'text-rose-600 dark:text-rose-400'
-                  }`}
-                >
-                  {status}
-                </h1>
-                <div className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300 font-medium mt-3">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      status === 'HEALTHY'
-                        ? 'bg-emerald-500'
-                        : status === 'DEGRADED'
-                        ? 'bg-amber-500'
-                        : 'bg-rose-500'
-                    }`}
-                  />
-                  <span>
-                    {status === 'HEALTHY'
-                      ? 'All monitored systems operating normally.'
-                      : status === 'DEGRADED'
-                      ? 'Physical sensor streams or broker connectivity reporting variance.'
-                      : 'Containment limits breached. Autonomous closed-loop intervention active.'}
-                  </span>
-                </div>
-              </div>
+        {/* Cinematic Deep Dusk Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/20" />
 
-              {/* Weather & Location Indicator */}
-              <div className="flex items-center gap-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 rounded-xl px-4 py-3 shrink-0">
-                <Sun className="w-7 h-7 text-amber-500 shrink-0" />
-                <div>
-                  <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    Clear • 28°C
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[140px]">
-                    {homeName || homeData?.home?.name || 'Apex Horizon Estate'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* KEY TELEMETRY METRICS STRIP (4 Columns with icons, deltas, and sparklines) */}
-          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
-            {/* Metric 1: Temperature */}
-            <div className="space-y-1.5 pr-2">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                  <Thermometer className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Temperature</span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold font-mono-numeric text-slate-900 dark:text-slate-100 tracking-tight">
-                {climate.avgTemperature != null ? `${climate.avgTemperature.toFixed(1)}°C` : '24.2°C'}
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-medium">
-                  ↓ 0.8°C
-                </span>
-                <svg className="w-16 h-4 stroke-emerald-500 fill-none" viewBox="0 0 60 16">
-                  <path d="M0 12 Q 15 14, 30 7 T 60 4" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
+        {/* Content */}
+        <div className="relative z-10 w-full p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          {/* Left: Greeting, Title & Estate Badges */}
+          <div className="space-y-2.5 max-w-xl">
+            <div className="text-xs font-medium text-slate-300 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+              <span>{currentTime.greeting}, Aadeesh</span>
             </div>
 
-            {/* Metric 2: CO2 */}
-            <div className="space-y-1.5 px-0 md:px-2 border-l-0 md:border-l border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                  <Wind className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">CO₂</span>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white font-sans">
+              {homeName || 'Apex Horizon Estate'}
+            </h1>
+
+            <p className="text-xs text-slate-300/90 font-mono">
+              A smarter, safer home.
+            </p>
+
+            {/* Estate Metadata Pill Badges */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px]">
+              <span className="bg-slate-900/80 border border-slate-700/70 text-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md">
+                <Layers className="w-3.5 h-3.5 text-slate-400" />
+                <span>{stats.totalFloors} Floors</span>
+              </span>
+              <span className="bg-slate-900/80 border border-slate-700/70 text-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md">
+                <DoorOpen className="w-3.5 h-3.5 text-slate-400" />
+                <span>{stats.totalRooms} Rooms</span>
+              </span>
+              <span className="bg-slate-900/80 border border-slate-700/70 text-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md">
+                <Radio className="w-3.5 h-3.5 text-slate-400" />
+                <span>{stats.totalSensors} Sensors</span>
+              </span>
+              <span className="bg-slate-900/80 border border-slate-700/70 text-emerald-400 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{fleet.onlineCount} Devices Online</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Right: Architectural Quote & Formatted Live Clock */}
+          <div className="flex flex-col lg:items-end justify-between self-stretch lg:text-right space-y-4">
+            <p className="text-xs italic text-slate-300 max-w-xs leading-relaxed hidden sm:block">
+              &ldquo;Technology should fade into the background, and make life better.&rdquo;
+            </p>
+
+            <div suppressHydrationWarning className="space-y-0.5">
+              <div suppressHydrationWarning className="text-xs font-mono text-slate-300">
+                {currentTime.date || 'Thu, 11 Sep 2026'}
               </div>
-              <div className="text-2xl sm:text-3xl font-bold font-mono-numeric text-slate-900 dark:text-slate-100 tracking-tight">
-                {climate.avgCO2 != null ? `${climate.avgCO2} ppm` : '612 ppm'}
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-medium">
-                  ↓ 12%
-                </span>
-                <svg className="w-16 h-4 stroke-emerald-500 fill-none" viewBox="0 0 60 16">
-                  <path d="M0 14 Q 20 8, 40 10 T 60 5" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+              <div suppressHydrationWarning className="text-2xl sm:text-3xl font-bold font-mono text-white tracking-tight">
+                {currentTime.time || '02:14 PM'}
               </div>
             </div>
-
-            {/* Metric 3: Power Draw */}
-            <div className="space-y-1.5 px-0 md:px-2 border-l-0 md:border-l border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Power Draw</span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold font-mono-numeric text-slate-900 dark:text-slate-100 tracking-tight">
-                {energy.currentTotalWatts != null
-                  ? `${(energy.currentTotalWatts / 1000).toFixed(2)} kW`
-                  : '1.24 kW'}
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-medium">
-                  ↑ 6%
-                </span>
-                <svg className="w-16 h-4 stroke-amber-500 fill-none" viewBox="0 0 60 16">
-                  <path d="M0 8 Q 20 12, 40 6 T 60 2" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Metric 4: Devices Online */}
-            <div className="space-y-1.5 pl-0 md:pl-2 border-l-0 md:border-l border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                  <Users className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Devices Online</span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold font-mono-numeric text-slate-900 dark:text-slate-100 tracking-tight">
-                {fleet.onlineCount} / {fleet.totalDevices}
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                  {fleet.offlineCount > 0 ? `${fleet.offlineCount} offline` : 'Fleet 100%'}
-                </span>
-                <svg className="w-16 h-4 stroke-blue-500 fill-none" viewBox="0 0 60 16">
-                  <path d="M0 10 Q 20 6, 40 8 T 60 3" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-            </div>
-          </section>
-
-          {/* WHAT THE SYSTEM SEES (Intelligence / Predictive Card) */}
-          <section className="bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  WHAT THE SYSTEM SEES
-                </h2>
-              </div>
-              <Link
-                href="/insights"
-                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
-              >
-                <span>View Insights</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {primaryPrediction ? (
-              <div className="space-y-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 shrink-0 mt-0.5">
-                    <AlertTriangle className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      {primaryPrediction.title}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      {primaryPrediction.summary}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Prediction</div>
-                    <div className="font-medium text-slate-800 dark:text-slate-200 truncate">{primaryPrediction.targetVariable}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Confidence</div>
-                    <div className="font-medium text-slate-800 dark:text-slate-200 font-mono-numeric">
-                      {(primaryPrediction.confidence * 100).toFixed(0)}%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Time to threshold</div>
-                    <div className="font-medium text-slate-800 dark:text-slate-200 font-mono-numeric">
-                      ~{primaryPrediction.predictedLeadTimeMin || 15}m
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Risk level</div>
-                    <div className="font-medium text-amber-600 dark:text-amber-400">Moderate</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      No emerging conditions require intervention.
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      All environmental parameters are within expected ranges.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Prediction</div>
-                    <div className="font-medium text-slate-800 dark:text-slate-200">None</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Confidence</div>
-                    <div className="font-medium text-slate-800 dark:text-slate-200 font-mono-numeric">—</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Time to threshold</div>
-                    <div className="font-medium text-slate-800 dark:text-slate-200 font-mono-numeric">—</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Risk level</div>
-                    <div className="font-semibold text-emerald-600 dark:text-emerald-400">Low</div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* WHAT THE SYSTEM IS DOING (Automations & Control Card) */}
-          <section className="bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  WHAT THE SYSTEM IS DOING
-                </h2>
-              </div>
-              <Link
-                href="/automations"
-                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
-              >
-                <span>View Automations</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 mt-0.5">
-                  <Sliders className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    {latestExecution
-                      ? `${latestExecution.actionTaken} on ${latestExecution.device?.name || 'Actuator'}`
-                      : 'Monitoring household conditions.'}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    {latestExecution
-                      ? latestExecution.decisionExplanation || 'Intervention executed within safety envelope.'
-                      : 'All automation policies are in monitoring mode.'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Safety Mode Badge */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/80 text-[11px] font-mono text-slate-700 dark:text-slate-300 shrink-0">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-slate-500 dark:text-slate-400">Safety Mode:</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100">FAIL-CLOSED</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-              <div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Active Policy</div>
-                <div className="font-medium text-slate-800 dark:text-slate-200">
-                  {latestExecution?.policy?.name || 'Ventilation Control'}
-                </div>
-              </div>
-              <div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Current Action</div>
-                <div className="font-medium text-slate-800 dark:text-slate-200">
-                  {latestExecution?.actionTaken || 'None'}
-                </div>
-              </div>
-              <div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Last Decision</div>
-                <div className="font-medium text-slate-800 dark:text-slate-200 font-mono-numeric">14:10</div>
-              </div>
-              <div>
-                <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Verification</div>
-                <div className="font-medium text-slate-800 dark:text-slate-200">
-                  {latestExecution?.verificationStatus || 'N/A'}
-                </div>
-              </div>
-            </div>
-          </section>
+          </div>
         </div>
+      </section>
 
-        {/* RIGHT COLUMN: Architectural CAD Floor Plan & Recent Activity */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* FLOOR PLAN CAD VIEW */}
-          <section className="bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                FLOOR PLAN
-              </h2>
-              {/* Floor Segmented Toggle */}
-              <div className="flex items-center p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/60 text-xs font-mono">
+      {/* ==================================================
+          SECTION B: CENTERPIECE WORKSPACE (7 Cols / 5 Cols)
+          ================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* LEFT: THE DIGITAL-TWIN 3D FLOOR PLAN CENTERPIECE (7 Cols) */}
+        <section className="lg:col-span-7 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden flex flex-col justify-between min-h-[580px]">
+          {/* Top Overlays: Floor Level Switcher + Live Badge */}
+          <div className="flex items-center justify-between z-10 mb-3">
+            <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium gap-1">
+              <button
+                onClick={() => setActiveFloor('Ground Floor')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeFloor === 'Ground Floor'
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                Ground Floor
+              </button>
+              <button
+                onClick={() => setActiveFloor('First Floor')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeFloor === 'First Floor'
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                First Floor
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium text-emerald-700 dark:text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live Telemetry</span>
+            </div>
+          </div>
+
+          {/* Center 3D Isometric Visualization Canvas */}
+          <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-950/90 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center select-none group">
+            {/* 3D Isometric Model Render */}
+            <div
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-300 ease-out"
+              style={{
+                backgroundImage: `url('/images/floorplan-3d.jpg')`,
+                transform: `scale(${zoomLevel})`,
+              }}
+            />
+
+            {/* Subtle Isometric Lighting Vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent pointer-events-none" />
+
+            {/* Left Floating Tool Controls */}
+            <div className="absolute left-3 top-3 z-10 flex flex-col gap-1.5">
+              <button
+                title="Toggle Layers"
+                className="w-8 h-8 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
+              >
+                <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </button>
+              <button
+                title="Zoom In"
+                onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.45))}
+                className="w-8 h-8 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button
+                title="Zoom Out"
+                onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.9))}
+                className="w-8 h-8 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Interactive Room Telemetry Hotspot Badges */}
+            {roomHotspots.map((spot) => {
+              const Icon = spot.icon;
+              const isSelected = selectedRoom === spot.name;
+
+              // Determine metric value based on active layer tab
+              let metricVal = spot.temp;
+              if (activeLayer === 'CO₂') metricVal = spot.co2;
+              else if (activeLayer === 'Occupancy') metricVal = spot.occupancy;
+              else if (activeLayer === 'Power') metricVal = spot.power;
+
+              return (
+                <div
+                  key={spot.id}
+                  onClick={() => setSelectedRoom(spot.name)}
+                  className={`absolute z-20 transition-all duration-200 cursor-pointer -translate-x-1/2 -translate-y-1/2 ${
+                    isSelected ? 'scale-105 ring-2 ring-blue-500' : 'hover:scale-105'
+                  }`}
+                  style={{ top: spot.top, left: spot.left }}
+                >
+                  <div className="bg-slate-950/90 hover:bg-slate-900 text-white backdrop-blur-md border border-slate-700/80 rounded-xl px-2.5 py-1.5 shadow-xl flex items-center gap-2 font-mono text-[11px]">
+                    <div className="w-5 h-5 rounded-md bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                      <Icon className="w-3 h-3" />
+                    </div>
+                    <div className="leading-tight">
+                      <div className="font-semibold text-slate-200 flex items-center gap-1">
+                        <span>{spot.name}</span>
+                        {isSelected && <Check className="w-2.5 h-2.5 text-blue-400" />}
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        <span>{metricVal}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Overlays: Telemetry Filter Tabs & 3D View Link */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 mt-1 border-t border-slate-100 dark:border-slate-800/80">
+            {/* Filter Tabs */}
+            <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium gap-1">
+              {(['Temperature', 'CO₂', 'Occupancy', 'Power'] as const).map((tab) => (
                 <button
-                  type="button"
-                  onClick={() => setActiveFloor('Floor 1')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] transition-colors cursor-pointer ${
-                    activeFloor === 'Floor 1'
-                      ? 'bg-slate-900 text-white dark:bg-slate-700 font-medium shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
+                  key={tab}
+                  onClick={() => setActiveLayer(tab)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    activeLayer === tab
+                      ? 'bg-blue-600 text-white shadow-xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Floor 1
+                  {tab === 'Temperature' && <Thermometer className="w-3.5 h-3.5" />}
+                  {tab === 'CO₂' && <Wind className="w-3.5 h-3.5" />}
+                  {tab === 'Occupancy' && <Users className="w-3.5 h-3.5" />}
+                  {tab === 'Power' && <Zap className="w-3.5 h-3.5" />}
+                  <span>{tab}</span>
                 </button>
+              ))}
+            </div>
+
+            {/* Right: 3D View Modal Link & Compass Rose */}
+            <div className="flex items-center gap-2">
+              <Link href="/home-view">
                 <button
-                  type="button"
-                  onClick={() => setActiveFloor('Floor 2')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] transition-colors cursor-pointer ${
-                    activeFloor === 'Floor 2'
-                      ? 'bg-slate-900 text-white dark:bg-slate-700 font-medium shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
-                  }`}
+                  title="Full Interactive Home View"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500 transition-colors cursor-pointer"
                 >
-                  Floor 2
+                  <span>3D View</span>
+                  <ExternalLink className="w-3 h-3 ml-0.5" />
                 </button>
+              </Link>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-mono font-bold text-[10px] text-slate-500 dark:text-slate-400">
+                <Compass className="w-4 h-4 text-slate-400 dark:text-slate-500" />
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* 2D Architectural CAD Floor Plan */}
-            <div className="relative border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-950/40">
-              <svg viewBox="0 0 360 250" className="w-full h-auto select-none">
-                {/* Exterior Wall Boundary */}
-                <rect
-                  x="10"
-                  y="10"
-                  width="340"
-                  height="230"
-                  rx="6"
-                  className="fill-white/80 dark:fill-slate-900/60 stroke-slate-300 dark:stroke-slate-700"
-                  strokeWidth="3"
-                />
-
-                {/* Interior Wall Partitions */}
-                <line x1="150" y1="10" x2="150" y2="170" className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="2.5" />
-                <line x1="10" y1="120" x2="150" y2="120" className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="2" />
-                <line x1="150" y1="170" x2="350" y2="170" className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="2.5" />
-                <line x1="250" y1="10" x2="250" y2="110" className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="2" />
-                <line x1="250" y1="110" x2="350" y2="110" className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="2" />
-
-                {/* Architectural Details: Door Swings */}
-                <path d="M 60 120 A 25 25 0 0 1 85 95" className="fill-none stroke-slate-300 dark:stroke-slate-600 stroke-dasharray-2" strokeWidth="1" />
-                <path d="M 150 70 A 25 25 0 0 1 175 95" className="fill-none stroke-slate-300 dark:stroke-slate-600 stroke-dasharray-2" strokeWidth="1" />
-                <path d="M 250 140 A 25 25 0 0 1 275 165" className="fill-none stroke-slate-300 dark:stroke-slate-600 stroke-dasharray-2" strokeWidth="1" />
-
-                {/* Plant Accent in Corner */}
-                <circle cx="28" cy="28" r="8" className="fill-emerald-100 dark:fill-emerald-950 stroke-emerald-500/50" strokeWidth="1" />
-                <circle cx="28" cy="138" r="8" className="fill-emerald-100 dark:fill-emerald-950 stroke-emerald-500/50" strokeWidth="1" />
-
-                {/* Room 1: Bedroom */}
-                <g transform="translate(45, 60)">
-                  <text className="text-[11px] font-medium fill-slate-700 dark:fill-slate-200">Bedroom</text>
-                  <circle cx="6" cy="18" r="3" className="fill-emerald-500" />
-                  <text x="14" y="21" className="text-[10px] font-mono fill-slate-600 dark:fill-slate-400">21.8°C</text>
-                </g>
-
-                {/* Room 2: Living Room */}
-                <g transform="translate(170, 75)">
-                  <text className="text-[11px] font-medium fill-slate-700 dark:fill-slate-200">Living Room</text>
-                  <circle cx="6" cy="18" r="3" className="fill-emerald-500" />
-                  <text x="14" y="21" className="text-[10px] font-mono fill-slate-600 dark:fill-slate-400">612 ppm</text>
-                </g>
-
-                {/* Room 3: Kitchen */}
-                <g transform="translate(270, 50)">
-                  <text className="text-[11px] font-medium fill-slate-700 dark:fill-slate-200">Kitchen</text>
-                  <circle cx="6" cy="18" r="3" className="fill-amber-500" />
-                  <text x="14" y="21" className="text-[10px] font-mono fill-slate-600 dark:fill-slate-400">24.6°C</text>
-                </g>
-
-                {/* Room 4: Study */}
-                <g transform="translate(200, 195)">
-                  <text className="text-[11px] font-medium fill-slate-700 dark:fill-slate-200">Study</text>
-                  <circle cx="6" cy="18" r="3" className="fill-emerald-500" />
-                  <text x="14" y="21" className="text-[10px] font-mono fill-slate-600 dark:fill-slate-400">20.1°C</text>
-                </g>
-              </svg>
-            </div>
-
-            <Link
-              href="/home-view"
-              className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
-            >
-              <span>Live environmental overview</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </section>
-
-          {/* RECENT ACTIVITY TIMELINE */}
-          <section className="bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+        {/* RIGHT: INTELLIGENCE & CONTROL STACK (5 Cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          {/* CARD 1: SYSTEM STATUS */}
+          <section className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  RECENT ACTIVITY
-                </h2>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <Activity className="w-3.5 h-3.5" />
+                </div>
+                <span>System Status</span>
               </div>
               <Link
                 href="/observability"
-                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
+                className="text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
               >
-                <span>View All</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <span>View Details</span>
+                <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
 
-            <div className="space-y-4">
-              {recentEvents.slice(0, 5).map((evt: any, i: number) => {
-                const dotColor =
-                  evt.color === 'amber'
-                    ? 'bg-amber-500'
-                    : evt.color === 'green'
-                    ? 'bg-emerald-500'
-                    : evt.color === 'red'
-                    ? 'bg-rose-500'
-                    : 'bg-slate-400 dark:bg-slate-500';
+            {/* Status Hero with Donut Progress Ring */}
+            <div className="flex items-center gap-4 pt-1">
+              {/* Circular SVG Donut Progress Indicator */}
+              <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="stroke-slate-100 dark:stroke-slate-800"
+                    strokeWidth="3.5"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className={status === 'HEALTHY' ? 'stroke-emerald-500' : 'stroke-amber-500'}
+                    strokeDasharray="85, 100"
+                    strokeLinecap="round"
+                    strokeWidth="3.5"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`w-2.5 h-2.5 rounded-full ${status === 'HEALTHY' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                </div>
+              </div>
 
-                return (
-                  <div key={evt.id || i} className="flex items-start gap-3 text-xs">
-                    {/* Semantic Node Dot */}
-                    <div className="pt-1 shrink-0">
-                      <span className={`block w-2.5 h-2.5 rounded-full ${dotColor}`} />
-                    </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xl sm:text-2xl font-black tracking-tight font-sans ${
+                    status === 'HEALTHY' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                  }`}>
+                    ● {status}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {status === 'HEALTHY'
+                    ? 'All monitored systems operating normally.'
+                    : 'Sensor variance detected. Closed-loop loop active.'}
+                </p>
+              </div>
+            </div>
 
-                    {/* Event Timestamp */}
-                    <span
-                      suppressHydrationWarning
-                      className="font-mono text-slate-400 dark:text-slate-500 text-[11px] shrink-0 w-10"
-                    >
-                      {mounted
-                        ? new Date(evt.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                          })
-                        : '--:--'}
-                    </span>
+            {/* 4-Metric Telemetry Horizontal Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+              {/* Temp */}
+              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/50">
+                <div className="text-base font-bold font-mono text-slate-900 dark:text-slate-100">
+                  {climate.avgTemperature ?? 24.2}°C
+                </div>
+                <div className="text-[10px] text-slate-400">Temperature</div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">↓ 0.8°C</span>
+                  <svg className="w-8 h-2.5 stroke-emerald-500 fill-none" viewBox="0 0 30 10">
+                    <path d="M0 8 Q 8 9, 15 4 T 30 2" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
 
-                    {/* Event Content */}
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                        {evt.title || evt.eventType}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate leading-snug">
-                        {evt.summary || evt.category}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {/* CO2 */}
+              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/50">
+                <div className="text-base font-bold font-mono text-slate-900 dark:text-slate-100">
+                  {climate.avgCO2 ?? 612} ppm
+                </div>
+                <div className="text-[10px] text-slate-400">CO₂</div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">↓ 12%</span>
+                  <svg className="w-8 h-2.5 stroke-emerald-500 fill-none" viewBox="0 0 30 10">
+                    <path d="M0 8 Q 10 3, 20 6 T 30 2" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Power */}
+              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/50">
+                <div className="text-base font-bold font-mono text-slate-900 dark:text-slate-100">
+                  {((energy.currentTotalWatts ?? 1240) / 1000).toFixed(2)} kW
+                </div>
+                <div className="text-[10px] text-slate-400">Power Draw</div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[9px] font-mono text-amber-600 dark:text-amber-400 font-semibold">↑ 6%</span>
+                  <svg className="w-8 h-2.5 stroke-amber-500 fill-none" viewBox="0 0 30 10">
+                    <path d="M0 6 Q 10 8, 20 3 T 30 1" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Devices */}
+              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/50">
+                <div className="text-base font-bold font-mono text-slate-900 dark:text-slate-100">
+                  {fleet.onlineCount} / {fleet.totalDevices}
+                </div>
+                <div className="text-[10px] text-slate-400">Devices Online</div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[9px] font-mono text-slate-400">{fleet.offlineCount} offline</span>
+                  <svg className="w-8 h-2.5 stroke-blue-500 fill-none" viewBox="0 0 30 10">
+                    <path d="M0 5 L 30 5" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* CARD 2: WHAT THE SYSTEM SEES (PREDICTIVE INTELLIGENCE) */}
+          <section className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <Brain className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    {activePred ? activePred.title : 'No emerging conditions require intervention.'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {activePred ? activePred.summary : 'All environmental parameters are within expected ranges.'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/insights"
+                className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5 shrink-0"
+              >
+                <span>View Insights</span>
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {/* 4 Metadata Columns */}
+            <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 font-mono text-[11px]">
+              <div>
+                <div className="text-slate-400 text-[10px]">Prediction</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {activePred ? activePred.predictedType : 'None'}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-400 text-[10px]">Confidence</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200">
+                  {activePred ? `${(activePred.confidence * 100).toFixed(0)}%` : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-400 text-[10px]">Time to threshold</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200">
+                  {activePred ? `${activePred.minutesToBreach} min` : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-400 text-[10px]">Risk level</div>
+                <div className={`font-semibold ${activePred?.severity === 'CRITICAL' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                  {activePred?.severity || 'Low'}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* CARD 3: WHAT THE SYSTEM IS DOING (CLOSED-LOOP CONTROL) */}
+          <section className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    What the System Is Doing
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Monitoring household conditions. All automation policies are in monitoring mode.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/automations"
+                className="text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 shrink-0"
+              >
+                <span>View Automations</span>
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {/* 5 Metadata Columns */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 font-mono text-[11px]">
+              <div>
+                <div className="text-slate-400 text-[10px]">Active Policy</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {activePolicies[0]?.name || 'Ventilation Control'}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-400 text-[10px]">Current Action</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {activeExec?.action || 'None'}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-400 text-[10px]">Last Decision</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200">14:10</div>
+              </div>
+              <div>
+                <div className="text-slate-400 text-[10px]">Safety Mode</div>
+                <div className="font-semibold text-emerald-600 dark:text-emerald-400">FAIL-CLOSED</div>
+              </div>
+              <div>
+                <div className="text-slate-400 text-[10px]">Verification</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200">N/A</div>
+              </div>
             </div>
           </section>
         </div>
       </div>
 
       {/* ==================================================
-          SECTION 2: SYSTEM COMPONENTS (Bottom Horizontal Strip)
+          SECTION C: 3-COLUMN BALANCED FOUNDATION ROW
           ================================================== */}
-      <section className="bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              SYSTEM COMPONENTS
-            </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+        {/* COLUMN 1: ENVIRONMENTAL TRENDS (4 Cols) */}
+        <section className="lg:col-span-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
+              <LineChartIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>Environmental Trends</span>
+            </div>
+            {/* Range Toggle */}
+            <div className="flex items-center p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] font-mono">
+              {(['24H', '7D', '30D'] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setTrendsRange(r)}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                    trendsRange === r
+                      ? 'bg-blue-600 text-white font-semibold'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
           </div>
-          <Link
-            href="/architecture"
-            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
-          >
-            <span>View Details</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
+
+          {/* Multi-metric Line Chart */}
+          <div className="h-44 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendsChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#f1f5f9'} />
+                <XAxis dataKey="time" stroke="#64748b" fontSize={10} tickLine={false} />
+                <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={['auto', 'auto']} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    borderColor: isDark ? '#334155' : '#e2e8f0',
+                    fontSize: '11px',
+                    fontFamily: 'monospace',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Line type="monotone" dataKey="temp" stroke="#38bdf8" strokeWidth={2} dot={false} name="Temperature (°C)" />
+                <Line type="monotone" dataKey="co2" stroke="#22c55e" strokeWidth={1.5} dot={false} name="CO₂ (ppm / 10)" />
+                <Line type="monotone" dataKey="humidity" stroke="#a855f7" strokeWidth={1.5} dot={false} name="Humidity (%)" />
+                <Line type="monotone" dataKey="power" stroke="#f59e0b" strokeWidth={1.5} dot={false} name="Power (kW)" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Chart Legend with Live Values */}
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-mono">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-sky-400" /> Temperature
+              </span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{climate.avgTemperature ?? 24.2}°C</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> CO₂
+              </span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{climate.avgCO2 ?? 612} ppm</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-purple-500" /> Humidity
+              </span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{climate.avgHumidity ?? 46}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-amber-500" /> Power
+              </span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{((energy.currentTotalWatts ?? 1240) / 1000).toFixed(2)} kW</span>
+            </div>
+          </div>
+        </section>
+
+        {/* COLUMN 2: RECENT ACTIVITY (4 Cols) */}
+        <section className="lg:col-span-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
+              <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Recent Activity</span>
+            </div>
+            <Link
+              href="/events"
+              className="text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+            >
+              <span>View All</span>
+              <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {/* Activity Timeline List */}
+          <div className="space-y-3">
+            {recentEvents.slice(0, 5).map((evt: any, i: number) => {
+              const dotColor =
+                evt.color === 'amber'
+                  ? 'bg-amber-500'
+                  : evt.color === 'green'
+                  ? 'bg-emerald-500'
+                  : evt.color === 'red'
+                  ? 'bg-rose-500'
+                  : evt.color === 'blue'
+                  ? 'bg-blue-500'
+                  : 'bg-slate-400 dark:bg-slate-500';
+
+              return (
+                <div key={evt.id || i} className="flex items-start gap-2.5 text-xs">
+                  {/* Formatted Timestamp */}
+                  <span
+                    suppressHydrationWarning
+                    className="font-mono text-slate-400 text-[11px] shrink-0 w-11 pt-0.5"
+                  >
+                    {mounted
+                      ? new Date(evt.timestamp).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false,
+                        })
+                      : '--:--'}
+                  </span>
+
+                  {/* Semantic Colored Node Dot */}
+                  <div className="pt-1.5 shrink-0">
+                    <span className={`block w-2 h-2 rounded-full ${dotColor}`} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-slate-800 dark:text-slate-200 truncate leading-tight">
+                      {evt.title || evt.eventType}
+                    </div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate leading-snug">
+                      {evt.summary || evt.category}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* COLUMN 3: SYSTEM COMPONENTS (4 Cols) */}
+        <section className="lg:col-span-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span>System Components</span>
+              </div>
+              <div className="text-[10px] text-slate-400 font-mono mt-0.5">All systems nominal</div>
+            </div>
+            <Link
+              href="/observability"
+              className="text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+            >
+              <span>View Details</span>
+              <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {/* 2x3 Micro-Card Component Grid */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {/* Database */}
+            <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Database className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Database</div>
+                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">● Healthy</div>
+              </div>
+            </div>
+
+            {/* MQTT Broker */}
+            <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+                <Radio className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">MQTT Broker</div>
+                <div className="text-[10px] text-teal-600 dark:text-teal-400 font-mono font-medium">● Connected</div>
+              </div>
+            </div>
+
+            {/* Ingestion */}
+            <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Ingestion</div>
+                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">● Healthy</div>
+              </div>
+            </div>
+
+            {/* Intelligence */}
+            <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                <Brain className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Intelligence</div>
+                <div className="text-[10px] text-purple-600 dark:text-purple-400 font-mono font-medium">● Healthy</div>
+              </div>
+            </div>
+
+            {/* Automation */}
+            <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <Sliders className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Automation</div>
+                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">● Healthy</div>
+              </div>
+            </div>
+
+            {/* Telemetry Freshness */}
+            <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
+                <RefreshCw className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Freshness</div>
+                <div suppressHydrationWarning className="text-[10px] text-slate-600 dark:text-slate-400 font-mono font-medium">
+                  {secondsAgo}s ago
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* ==================================================
+          SECTION D: AMBIENT FOOTER BANNER
+          ================================================== */}
+      <footer className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 py-6 px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono select-none bg-slate-950 text-slate-400 shadow-xs">
+        {/* Subtle Background Scenic Mist */}
+        <div
+          className="absolute inset-0 bg-cover bg-bottom opacity-20 pointer-events-none"
+          style={{ backgroundImage: `url('/images/footer-mountains.jpg')` }}
+        />
+        <div className="absolute inset-0 bg-slate-950/70 pointer-events-none" />
+
+        <div className="relative z-10 tracking-widest text-[11px] text-slate-400 uppercase font-semibold">
+          INTELLIGENCE FOR A MORE HUMAN TOMORROW
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {/* 1. Database */}
-          <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-              <Database className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Database</div>
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Healthy</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. MQTT Broker */}
-          <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/50 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
-              <Radio className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">MQTT Broker</div>
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>{mqttSubsystem?.status === 'HEALTHY' ? 'Connected' : 'Connected'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Ingestion */}
-          <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
-              <Cpu className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Ingestion</div>
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Healthy</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 4. Intelligence */}
-          <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-              <Brain className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Intelligence</div>
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Healthy</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 5. Automation */}
-          <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-              <Sliders className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Automation</div>
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Healthy</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 6. Telemetry Freshness */}
-          <div className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-              <RefreshCw className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Telemetry Freshness</div>
-              <div
-                suppressHydrationWarning
-                className="text-[11px] text-slate-600 dark:text-slate-400 font-mono font-medium"
-              >
-                {secondsAgo} seconds ago
-              </div>
-            </div>
-          </div>
+        <div className="relative z-10 text-[11px] text-slate-400 font-mono">
+          Home Intelligence v1.0.0
         </div>
-      </section>
+      </footer>
     </div>
   );
 }
