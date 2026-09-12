@@ -79,7 +79,7 @@ describe('Cross-Sensor Incident Intelligence Engine - Controlled Benchmark', () 
   });
 
   it('Benchmark 1: Cooking Event multi-sensor correlation (Power + Temp + PM2.5 + Occupancy)', async () => {
-    const now = new Date();
+    const now = new Date(Date.now() + 5000);
 
     // Ingest synchronized readings simulating culinary activity in kitchen
     const readings = [
@@ -125,7 +125,7 @@ describe('Cross-Sensor Incident Intelligence Engine - Controlled Benchmark', () 
   });
 
   it('Benchmark 2: Unmonitored Water Leak correlation (Continuous Flow + Humidity + Unoccupied)', async () => {
-    const now = new Date();
+    const now = new Date(Date.now() + 5000);
 
     const readings = [
       { sensorId: powderRoomSensors['OCCUPANCY'].id, timestamp: now, value: 0, quality: 'VALID' as const },
@@ -169,7 +169,7 @@ describe('Cross-Sensor Incident Intelligence Engine - Controlled Benchmark', () 
   });
 
   it('Benchmark 3: AC Cooling Failure correlation (Compressor Active + Upward Temp Drift + Occupied)', async () => {
-    const now = new Date();
+    const now = new Date(Date.now() + 5000);
 
     const readings = [
       { sensorId: livingRoomSensors['OCCUPANCY'].id, timestamp: now, value: 1, quality: 'VALID' as const },
@@ -213,7 +213,7 @@ describe('Cross-Sensor Incident Intelligence Engine - Controlled Benchmark', () 
   });
 
   it('Benchmark 4: Window Thermal Breach correlation (Contact Open + Steep Drop + HVAC Counter-action)', async () => {
-    const now = new Date();
+    const now = new Date(Date.now() + 5000);
 
     const readings = [
       { sensorId: livingRoomSensors['CONTACT'].id, timestamp: now, value: 1, quality: 'VALID' as const },
@@ -257,7 +257,7 @@ describe('Cross-Sensor Incident Intelligence Engine - Controlled Benchmark', () 
   });
 
   it('Benchmark 5: Baseline Control Scenario - Clean telemetry exhibits 0% false positive incidents', async () => {
-    const now = new Date();
+    const now = new Date(Date.now() + 5000);
 
     // Reset sensors to nominal peaceful baseline conditions
     const readings = [
