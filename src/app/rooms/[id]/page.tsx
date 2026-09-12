@@ -33,10 +33,19 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { formatMetricValue, formatRelativeTime } from '@/lib/formatters';
+import { useTheme } from '@/lib/theme';
 
 export default function RoomDetailPage() {
+  const { isDark } = useTheme();
   const params = useParams();
   const roomId = params?.id as string;
+
+  const chartGrid = isDark ? '#1e293b' : '#e2e8f0';
+  const chartAxis = isDark ? '#64748b' : '#94a3b8';
+  const chartTooltipBg = isDark ? '#0b0f17' : '#ffffff';
+  const chartTooltipBorder = isDark ? '#1e293b' : '#e2e8f0';
+  const chartTooltipText = isDark ? '#f1f5f9' : '#0f172a';
+  const chartCutout = isDark ? '#090d16' : '#ffffff';
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -247,16 +256,22 @@ export default function RoomDetailPage() {
             {tempForecast?.forecast ? (
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={tempForecast.forecast}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
                   <XAxis
                     dataKey="timestamp"
-                    stroke="#64748b"
+                    stroke={chartAxis}
                     fontSize={10}
                     tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   />
-                  <YAxis stroke="#64748b" fontSize={10} domain={['auto', 'auto']} />
+                  <YAxis stroke={chartAxis} fontSize={10} domain={['auto', 'auto']} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0b0f17', borderColor: '#1e293b', fontSize: '11px' }}
+                    contentStyle={{
+                      backgroundColor: chartTooltipBg,
+                      borderColor: chartTooltipBorder,
+                      color: chartTooltipText,
+                      fontSize: '11px',
+                      borderRadius: '6px',
+                    }}
                     formatter={(value: any) => [`${value} °C`, 'Predicted Temp']}
                     labelFormatter={(lbl) => new Date(lbl).toLocaleTimeString()}
                   />
@@ -271,7 +286,7 @@ export default function RoomDetailPage() {
                     type="monotone"
                     dataKey="confidenceInterval80.lower"
                     stroke="none"
-                    fill="#090d16"
+                    fill={chartCutout}
                     fillOpacity={0.9}
                   />
                   <Line
@@ -315,21 +330,27 @@ export default function RoomDetailPage() {
             {occupancyForecast?.forecast ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={occupancyForecast.forecast}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
                   <XAxis
                     dataKey="timestamp"
-                    stroke="#64748b"
+                    stroke={chartAxis}
                     fontSize={10}
                     tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   />
                   <YAxis
-                    stroke="#64748b"
+                    stroke={chartAxis}
                     fontSize={10}
                     domain={[0, 1]}
                     tickFormatter={(v) => `${Math.round(v * 100)}%`}
                   />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0b0f17', borderColor: '#1e293b', fontSize: '11px' }}
+                    contentStyle={{
+                      backgroundColor: chartTooltipBg,
+                      borderColor: chartTooltipBorder,
+                      color: chartTooltipText,
+                      fontSize: '11px',
+                      borderRadius: '6px',
+                    }}
                     formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`, 'Occupancy Probability']}
                     labelFormatter={(lbl) => new Date(lbl).toLocaleTimeString()}
                   />
@@ -364,16 +385,22 @@ export default function RoomDetailPage() {
           <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sparklines?.TEMPERATURE || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
                 <XAxis
                   dataKey="timestamp"
-                  stroke="#64748b"
+                  stroke={chartAxis}
                   fontSize={10}
                   tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 />
-                <YAxis stroke="#64748b" fontSize={10} domain={['dataMin - 1', 'dataMax + 1']} />
+                <YAxis stroke={chartAxis} fontSize={10} domain={['dataMin - 1', 'dataMax + 1']} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0b0f17', borderColor: '#1e293b', fontSize: '11px' }}
+                  contentStyle={{
+                    backgroundColor: chartTooltipBg,
+                    borderColor: chartTooltipBorder,
+                    color: chartTooltipText,
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                  }}
                   formatter={(value: any) => [`${value}°C`, 'Temp']}
                   labelFormatter={(lbl) => new Date(lbl).toLocaleString()}
                 />
@@ -400,16 +427,22 @@ export default function RoomDetailPage() {
           <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sparklines?.POWER || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
                 <XAxis
                   dataKey="timestamp"
-                  stroke="#64748b"
+                  stroke={chartAxis}
                   fontSize={10}
                   tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 />
-                <YAxis stroke="#64748b" fontSize={10} />
+                <YAxis stroke={chartAxis} fontSize={10} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0b0f17', borderColor: '#1e293b', fontSize: '11px' }}
+                  contentStyle={{
+                    backgroundColor: chartTooltipBg,
+                    borderColor: chartTooltipBorder,
+                    color: chartTooltipText,
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                  }}
                   formatter={(value: any) => [`${value} W`, 'Power']}
                   labelFormatter={(lbl) => new Date(lbl).toLocaleString()}
                 />

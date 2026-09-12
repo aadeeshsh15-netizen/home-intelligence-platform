@@ -47,6 +47,20 @@ export class SystemHealthService {
 
     // 2. MQTT Gateway Check
     const mqttGateway = MqttGatewayService.getInstance();
+    if (!mqttGateway.isGatewayConnected() && process.env.NODE_ENV !== 'test') {
+      try {
+        await mqttGateway.start();
+        // Allow brief window for local broker connect event to register
+        if (!mqttGateway.isGatewayConnected()) {
+          for (let i = 0; i < 6; i++) {
+            if (mqttGateway.isGatewayConnected()) break;
+            await new Promise((r) => setTimeout(r, 50));
+          }
+        }
+      } catch {
+        // Broker unreachable; will gracefully report DEGRADED
+      }
+    }
     const mqttGatewayStatus = mqttGateway.getStatus();
     const isMqttConnected = mqttGateway.isGatewayConnected();
 

@@ -247,14 +247,14 @@ export default function DevicesPage() {
       </div>
 
       {/* Metrics & Filter Ribbon */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab('ALL')}
             className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
               activeTab === 'ALL'
-                ? 'bg-slate-800 text-slate-100 font-semibold'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
             All Fleet ({devices.length})
@@ -263,39 +263,39 @@ export default function DevicesPage() {
             onClick={() => setActiveTab('MQTT')}
             className={`px-3 py-1.5 rounded text-xs font-mono transition-colors flex items-center gap-1.5 ${
               activeTab === 'MQTT'
-                ? 'bg-sky-950/70 border border-sky-800 text-sky-300 font-semibold'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-sky-100 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800 text-sky-800 dark:text-sky-300 font-semibold'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
-            <Radio className="w-3 h-3 text-sky-400" />
+            <Radio className="w-3 h-3 text-sky-500 dark:text-sky-400" />
             Physical Hardware ({physicalCount})
           </button>
           <button
             onClick={() => setActiveTab('SIMULATED')}
             className={`px-3 py-1.5 rounded text-xs font-mono transition-colors flex items-center gap-1.5 ${
               activeTab === 'SIMULATED'
-                ? 'bg-slate-800 border border-slate-700 text-slate-200 font-semibold'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 font-semibold'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
-            <Cpu className="w-3 h-3 text-emerald-400" />
+            <Cpu className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
             Simulated ({simulatedCount})
           </button>
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
-          <span className="flex items-center gap-1 text-emerald-400 font-medium">
+          <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             {onlineCount} Online
           </span>
           {staleCount > 0 && (
-            <span className="flex items-center gap-1 text-amber-400 font-medium">
+            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
               <span className="w-2 h-2 rounded-full bg-amber-500"></span>
               {staleCount} Stale
             </span>
           )}
           {offlineCount > 0 && (
-            <span className="flex items-center gap-1 text-rose-400 font-medium">
+            <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium">
               <span className="w-2 h-2 rounded-full bg-rose-500"></span>
               {offlineCount} Offline
             </span>
@@ -314,19 +314,19 @@ export default function DevicesPage() {
           else if (device.status === 'STALE') statusBadgeVariant = 'warning';
 
           return (
-            <Card key={device.id} className="flex flex-col justify-between border-slate-800 bg-slate-950">
+            <Card key={device.id} className="flex flex-col justify-between border-slate-200 dark:border-slate-800">
               <div>
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-slate-100">{device.name}</h3>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{device.name}</h3>
                       {isPhysical ? (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-950 border border-sky-800 text-sky-300 font-semibold flex items-center gap-1">
-                          <Radio className="w-2.5 h-2.5 text-sky-400" />
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-100 dark:bg-sky-950 border border-sky-300 dark:border-sky-800 text-sky-800 dark:text-sky-300 font-semibold flex items-center gap-1">
+                          <Radio className="w-2.5 h-2.5 text-sky-500 dark:text-sky-400" />
                           ESP32
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-900 border border-slate-800 text-slate-400">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400">
                           SIMULATED
                         </span>
                       )}
@@ -342,36 +342,36 @@ export default function DevicesPage() {
                 </div>
 
                 {/* Identity & Protocol Attributes */}
-                <div className="bg-slate-900/80 p-3 rounded border border-slate-800/80 space-y-1.5 text-xs font-mono mb-4">
-                  <div className="flex items-center justify-between text-slate-400">
+                <div className="bg-slate-50 dark:bg-slate-900/80 p-3 rounded border border-slate-200 dark:border-slate-800/80 space-y-1.5 text-xs font-mono mb-4">
+                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                     <span className="text-slate-500">IDENTIFIER</span>
-                    <span className="text-sky-400 font-semibold truncate max-w-[170px]" title={device.identifier}>
+                    <span className="text-sky-600 dark:text-sky-400 font-semibold truncate max-w-[170px]" title={device.identifier}>
                       {device.identifier}
                     </span>
                   </div>
                   {device.macAddress && (
-                    <div className="flex items-center justify-between text-slate-400">
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                       <span className="text-slate-500">MAC ADDR</span>
-                      <span className="text-slate-300">{device.macAddress}</span>
+                      <span className="text-slate-800 dark:text-slate-300">{device.macAddress}</span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-slate-400">
+                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                     <span className="text-slate-500">HARDWARE</span>
-                    <span className="text-slate-300">{device.hardwareType || device.deviceType}</span>
+                    <span className="text-slate-800 dark:text-slate-300">{device.hardwareType || device.deviceType}</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-400">
+                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                     <span className="text-slate-500">PROTOCOL</span>
-                    <span className={isPhysical ? 'text-sky-400 font-semibold' : 'text-emerald-400'}>
+                    <span className={isPhysical ? 'text-sky-600 dark:text-sky-400 font-semibold' : 'text-emerald-600 dark:text-emerald-400'}>
                       {device.protocol}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-400">
+                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                     <span className="text-slate-500">FIRMWARE</span>
-                    <span className="text-slate-300">{device.firmwareVersion || 'v1.0.0-esp32'}</span>
+                    <span className="text-slate-800 dark:text-slate-300">{device.firmwareVersion || 'v1.0.0-esp32'}</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-400">
+                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                     <span className="text-slate-500">LAST SEEN</span>
-                    <span className="text-slate-300">{formatRelativeTime(device.lastSeenAt)}</span>
+                    <span className="text-slate-800 dark:text-slate-300">{formatRelativeTime(device.lastSeenAt)}</span>
                   </div>
                 </div>
 
@@ -382,15 +382,15 @@ export default function DevicesPage() {
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {device.sensors?.length === 0 ? (
-                      <span className="text-xs font-mono text-slate-600">No attached telemetry sensors</span>
+                      <span className="text-xs font-mono text-slate-500">No attached telemetry sensors</span>
                     ) : (
                       device.sensors.map((s) => (
                         <span
                           key={s.id}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-300"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300"
                         >
                           <span className="text-slate-500">{s.type}:</span>
-                          <span className="text-slate-100 font-semibold">
+                          <span className="text-slate-900 dark:text-slate-100 font-semibold">
                             {formatMetricValue(s.lastReadingValue, s.unit)}
                           </span>
                         </span>
@@ -401,7 +401,7 @@ export default function DevicesPage() {
               </div>
 
               {/* Footer MQTT Topic & Revocation */}
-              <div className="pt-3 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
+              <div className="pt-3 mt-4 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
                 <span className="truncate max-w-[210px]" title={`home/${homeId}/device/${device.identifier}/telemetry`}>
                   {isPhysical
                     ? `topic: home/.../${device.identifier}/telemetry`
@@ -412,16 +412,16 @@ export default function DevicesPage() {
                   {isPhysical && (
                     <button
                       onClick={() => handleRevokeDevice(device.id, device.name)}
-                      className="text-slate-500 hover:text-rose-400 transition-colors p-1"
+                      className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors p-1"
                       title="Revoke device credentials"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {isPhysical ? (
-                    <Wifi className="w-3.5 h-3.5 text-sky-400" />
+                    <Wifi className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
                   ) : (
-                    <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                    <Activity className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                   )}
                 </div>
               </div>
@@ -432,18 +432,18 @@ export default function DevicesPage() {
 
       {/* Register Physical Device Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
             {!provisionResult ? (
               <div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
                   <div className="flex items-center gap-2">
-                    <Radio className="w-4 h-4 text-sky-400" />
-                    <h2 className="text-base font-bold text-slate-100">Provision ESP32 Physical Node</h2>
+                    <Radio className="w-4 h-4 text-sky-500 dark:text-sky-400" />
+                    <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Provision ESP32 Physical Node</h2>
                   </div>
                   <button
                     onClick={() => setShowModal(false)}
-                    className="text-slate-500 hover:text-slate-300 text-sm font-mono"
+                    className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 text-sm font-mono"
                   >
                     ✕
                   </button>
@@ -451,24 +451,24 @@ export default function DevicesPage() {
 
                 <form onSubmit={handleRegisterDevice} className="space-y-4 text-xs font-mono">
                   <div>
-                    <label className="block text-slate-400 mb-1">DEVICE NAME</label>
+                    <label className="block text-slate-600 dark:text-slate-400 mb-1">DEVICE NAME</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Living Room Environmental Node"
                       value={provName}
                       onChange={(e) => setProvName(e.target.value)}
-                      className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-sky-500"
+                      className="w-full px-3 py-2 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-slate-400 mb-1">TARGET ROOM</label>
+                      <label className="block text-slate-600 dark:text-slate-400 mb-1">TARGET ROOM</label>
                       <select
                         value={provRoomId}
                         onChange={(e) => setProvRoomId(e.target.value)}
-                        className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-sky-500"
+                        className="w-full px-3 py-2 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
                       >
                         {rooms.map((r) => (
                           <option key={r.id} value={r.id}>
@@ -479,11 +479,11 @@ export default function DevicesPage() {
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 mb-1">HARDWARE MODEL</label>
+                      <label className="block text-slate-600 dark:text-slate-400 mb-1">HARDWARE MODEL</label>
                       <select
                         value={provHardware}
                         onChange={(e) => setProvHardware(e.target.value)}
-                        className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-sky-500"
+                        className="w-full px-3 py-2 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
                       >
                         <option value="ESP32_WROOM_32">ESP32 DevKit v1 (WROOM-32)</option>
                         <option value="ESP8266">ESP8266 (NodeMCU)</option>
@@ -492,18 +492,18 @@ export default function DevicesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 mb-1">MAC ADDRESS (OPTIONAL)</label>
+                    <label className="block text-slate-600 dark:text-slate-400 mb-1">MAC ADDRESS (OPTIONAL)</label>
                     <input
                       type="text"
                       placeholder="e.g. 24:6F:28:AB:CD:EF"
                       value={provMac}
                       onChange={(e) => setProvMac(e.target.value)}
-                      className="w-full px-3 py-2 rounded bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-sky-500"
+                      className="w-full px-3 py-2 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 mb-2">EQUIPPED SENSORS</label>
+                    <label className="block text-slate-600 dark:text-slate-400 mb-2">EQUIPPED SENSORS</label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { type: 'TEMPERATURE', label: 'Temperature (DHT22 / BME280)' },
@@ -515,13 +515,13 @@ export default function DevicesPage() {
                       ].map((s) => (
                         <label
                           key={s.type}
-                          className="flex items-center gap-2 p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:bg-slate-900 text-slate-300"
+                          className="flex items-center gap-2 p-2 rounded bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300"
                         >
                           <input
                             type="checkbox"
                             checked={provSensors.includes(s.type)}
                             onChange={() => toggleSensor(s.type)}
-                            className="rounded border-slate-700 text-sky-600 focus:ring-0"
+                            className="rounded border-slate-300 dark:border-slate-700 text-sky-600 focus:ring-0"
                           />
                           <span>{s.label}</span>
                         </label>
@@ -529,7 +529,7 @@ export default function DevicesPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                     <Button
                       type="button"
                       variant="outline"
@@ -550,44 +550,44 @@ export default function DevicesPage() {
               </div>
             ) : (
               <div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                  <div className="flex items-center gap-2 text-emerald-400">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                     <CheckCircle2 className="w-5 h-5" />
-                    <h2 className="text-base font-bold text-slate-100">ESP32 Node Provisioned!</h2>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">ESP32 Node Provisioned!</h2>
                   </div>
                   <button
                     onClick={() => setShowModal(false)}
-                    className="text-slate-500 hover:text-slate-300 text-sm font-mono"
+                    className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 text-sm font-mono"
                   >
                     ✕
                   </button>
                 </div>
 
                 <div className="space-y-4 text-xs font-mono">
-                  <div className="bg-amber-950/40 border border-amber-800/80 p-3 rounded text-amber-200 space-y-1">
+                  <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 p-3 rounded text-amber-800 dark:text-amber-200 space-y-1">
                     <span className="font-bold flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-amber-400" />
+                      <ShieldCheck className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       One-Time Device Secret
                     </span>
-                    <p className="text-[11px] text-amber-300">
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300">
                       Copy the generated credentials now. The raw authentication token is never stored in plaintext and cannot be recovered.
                     </p>
                   </div>
 
-                  <div className="bg-slate-900 p-3 rounded border border-slate-800 space-y-2">
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-800 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">DEVICE ID:</span>
-                      <span className="text-sky-400 font-semibold">{provisionResult.credentials.deviceId}</span>
+                      <span className="text-sky-600 dark:text-sky-400 font-semibold">{provisionResult.credentials.deviceId}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">TELEMETRY TOPIC:</span>
-                      <span className="text-slate-300 truncate max-w-[280px]">
+                      <span className="text-slate-700 dark:text-slate-300 truncate max-w-[280px]">
                         {provisionResult.credentials.telemetryTopic}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">AUTH TOKEN:</span>
-                      <span className="text-emerald-400 font-semibold truncate max-w-[280px]">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold truncate max-w-[280px]">
                         {provisionResult.credentials.authToken}
                       </span>
                     </div>
@@ -595,24 +595,24 @@ export default function DevicesPage() {
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-slate-400">FIRMWARE CONFIG (config.h):</span>
+                      <span className="text-slate-600 dark:text-slate-400">FIRMWARE CONFIG (config.h):</span>
                       <button
                         onClick={copyConfig}
-                        className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300"
+                        className="flex items-center gap-1 text-[11px] text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300"
                       >
                         {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                         {copied ? 'Copied!' : 'Copy Code'}
                       </button>
                     </div>
-                    <pre className="bg-slate-950 p-3 rounded border border-slate-800 text-[10px] text-slate-300 overflow-x-auto max-h-44">
+                    <pre className="bg-slate-50 dark:bg-slate-950 p-3 rounded border border-slate-200 dark:border-slate-800 text-[10px] text-slate-800 dark:text-slate-300 overflow-x-auto max-h-44">
                       {provisionResult.configSnippet}
                     </pre>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800 flex justify-end">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end">
                     <Button
                       onClick={() => setShowModal(false)}
-                      className="text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200"
+                      className="text-xs font-mono bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
                     >
                       Done
                     </Button>

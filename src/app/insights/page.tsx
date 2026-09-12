@@ -335,7 +335,7 @@ export default function InsightsPage() {
     }
     if (status === 'EXPIRED' || outcome === 'FALSE_POSITIVE') {
       return (
-        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-slate-900 border border-slate-700 text-slate-400 flex items-center gap-1">
+        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 flex items-center gap-1">
           <Check className="w-3 h-3" />
           EXPIRED (FALSE ALARM)
         </span>
@@ -366,13 +366,13 @@ export default function InsightsPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-100">Household Intelligence Engine</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Household Intelligence Engine</h1>
             <Badge variant="info">Phase 5: Anticipatory Intelligence</Badge>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-mono mt-1">
             Observe → Detect → Correlate → Predict → <strong>Anticipate</strong>: Detect potential incidents before they occur
           </p>
         </div>
@@ -392,54 +392,54 @@ export default function InsightsPage() {
       </div>
 
       {/* Anticipatory Intelligence Architecture Banner */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-lg p-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
         <div className="space-y-1">
           <span className="text-slate-500 uppercase block text-[10px]">Threshold Crossing Probability</span>
-          <span className="text-sky-400 font-semibold block">Normal CDF: Φ((ŷ - T) / s)</span>
-          <p className="text-slate-400 text-[11px]">
+          <span className="text-sky-600 dark:text-sky-400 font-semibold block">Normal CDF: Φ((ŷ - T) / s)</span>
+          <p className="text-slate-600 dark:text-slate-400 text-[11px]">
             No fabricated heuristics; analytical CDF integration over model uncertainty.
           </p>
         </div>
 
         <div className="space-y-1">
           <span className="text-slate-500 uppercase block text-[10px]">Multimodal Evidence Confidence</span>
-          <span className="text-emerald-400 font-semibold block">C = 0.50·P + 0.30·W + 0.20·R</span>
-          <p className="text-slate-400 text-[11px]">
+          <span className="text-emerald-600 dark:text-emerald-400 font-semibold block">C = 0.50·P + 0.30·W + 0.20·R</span>
+          <p className="text-slate-600 dark:text-slate-400 text-[11px]">
             Synthesizes forecast probability, sensor evidence weights, and model reliability.
           </p>
         </div>
 
         <div className="space-y-1">
           <span className="text-slate-500 uppercase block text-[10px]">Predicted Lead Time</span>
-          <span className="text-amber-400 font-semibold block">Linear Interpolation min(Crossing)</span>
-          <p className="text-slate-400 text-[11px]">
+          <span className="text-amber-600 dark:text-amber-400 font-semibold block">Linear Interpolation min(Crossing)</span>
+          <p className="text-slate-600 dark:text-slate-400 text-[11px]">
             Calculates exact minutes remaining until threshold breach.
           </p>
         </div>
 
         <div className="space-y-1">
           <span className="text-slate-500 uppercase block text-[10px]">Predictive Lifecycle</span>
-          <span className="text-purple-400 font-semibold block">PREDICTED → CONFIRMED / EXPIRED</span>
-          <p className="text-slate-400 text-[11px]">
+          <span className="text-purple-600 dark:text-purple-400 font-semibold block">PREDICTED → CONFIRMED / EXPIRED</span>
+          <p className="text-slate-600 dark:text-slate-400 text-[11px]">
             Tracks actual lead-time against Phase 2 incidents; auto-expires false positives.
           </p>
         </div>
       </div>
 
       {/* Live Incident & Disturbance Injection Sandbox */}
-      <Card className="border-sky-900/50 bg-sky-950/20">
+      <Card className="border-sky-200 dark:border-sky-900/50 bg-sky-50/50 dark:bg-sky-950/20">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 text-sky-400" />
-              <CardTitle className="text-sky-300">Live Incident &amp; Disturbance Injection Sandbox</CardTitle>
+              <FlaskConical className="w-4 h-4 text-sky-500 dark:text-sky-400" />
+              <CardTitle className="text-sky-900 dark:text-sky-300">Live Incident &amp; Disturbance Injection Sandbox</CardTitle>
             </div>
             {injectionStatus && (
-              <span className="text-xs font-mono text-sky-400 animate-pulse">{injectionStatus}</span>
+              <span className="text-xs font-mono text-sky-600 dark:text-sky-400 animate-pulse">{injectionStatus}</span>
             )}
           </div>
         </CardHeader>
-        <p className="text-xs text-slate-400 mb-3">
+        <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
           Inject multi-sensor physical disturbances into the physics pipeline to verify real-time cross-sensor correlation and anticipatory early warnings:
         </p>
 
@@ -644,40 +644,40 @@ export default function InsightsPage() {
           {/* Performance Metrics Summary Ribbon */}
           {predictiveMetrics && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <div className="bg-slate-900/70 border border-slate-800 p-3 rounded-lg font-mono">
+              <div className="bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-lg font-mono">
                 <span className="text-[10px] text-slate-500 uppercase block">Total Early Warnings</span>
-                <span className="text-lg font-bold text-slate-100">{predictiveMetrics.totalWarnings}</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Historical warnings evaluated</span>
+                <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{predictiveMetrics.totalWarnings}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">Historical warnings evaluated</span>
               </div>
 
-              <div className="bg-slate-900/70 border border-slate-800 p-3 rounded-lg font-mono">
+              <div className="bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-lg font-mono">
                 <span className="text-[10px] text-slate-500 uppercase block">Empirical Precision</span>
-                <span className="text-lg font-bold text-emerald-400">{predictiveMetrics.precisionPercent}%</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">{predictiveMetrics.confirmedTruePositives} Confirmed True Positives</span>
+                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{predictiveMetrics.precisionPercent}%</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">{predictiveMetrics.confirmedTruePositives} Confirmed True Positives</span>
               </div>
 
-              <div className="bg-slate-900/70 border border-slate-800 p-3 rounded-lg font-mono">
+              <div className="bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-lg font-mono">
                 <span className="text-[10px] text-slate-500 uppercase block">False Positive Rate</span>
-                <span className="text-lg font-bold text-amber-400">{predictiveMetrics.falsePositiveRatePercent}%</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">{predictiveMetrics.expiredFalsePositives} Expired / False Alarms</span>
+                <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{predictiveMetrics.falsePositiveRatePercent}%</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">{predictiveMetrics.expiredFalsePositives} Expired / False Alarms</span>
               </div>
 
-              <div className="bg-slate-900/70 border border-slate-800 p-3 rounded-lg font-mono">
+              <div className="bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-lg font-mono">
                 <span className="text-[10px] text-slate-500 uppercase block">Average Warning Lead Time</span>
-                <span className="text-lg font-bold text-sky-400">+{predictiveMetrics.averageLeadTimeMinutes} min</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Advance notice prior to breach</span>
+                <span className="text-lg font-bold text-sky-600 dark:text-sky-400">+{predictiveMetrics.averageLeadTimeMinutes} min</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">Advance notice prior to breach</span>
               </div>
 
-              <div className="bg-slate-900/70 border border-slate-800 p-3 rounded-lg font-mono">
+              <div className="bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-lg font-mono">
                 <span className="text-[10px] text-slate-500 uppercase block">Active In Flight</span>
-                <span className="text-lg font-bold text-purple-400">{predictiveMetrics.unresolvedPending}</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Monitoring verification window</span>
+                <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{predictiveMetrics.unresolvedPending}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">Monitoring verification window</span>
               </div>
             </div>
           )}
 
           {predictiveIncidents.length === 0 ? (
-            <Card className="text-center py-12 text-slate-500 font-mono text-xs">
+            <Card className="text-center py-12 text-slate-500 font-mono text-xs border-slate-200 dark:border-slate-800">
               No predictive early warnings matching filter &quot;{predictiveFilter}&quot;. Use the sandbox buttons above or click &quot;Evaluate&quot; to test anticipatory reasoning.
             </Card>
           ) : (
@@ -689,37 +689,37 @@ export default function InsightsPage() {
               const ci95 = pred.confidenceInterval95 as [number, number] | null;
 
               return (
-                <Card key={pred.id} className="space-y-4 border-purple-950/60 bg-slate-950/80 shadow-md">
+                <Card key={pred.id} className="space-y-4 border-slate-200 dark:border-purple-950/60 shadow-sm">
                   {/* Warning Header */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {getPredictiveIcon(pred.type)}
-                        <span className="text-sm font-bold text-slate-100">{pred.title}</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{pred.title}</span>
                         <Badge variant={getSeverityBadgeVariant(pred.severity)}>
                           {pred.severity}
                         </Badge>
                         {getPredictiveStatusBadge(pred.status, pred.outcome)}
 
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-purple-950/70 border border-purple-800 text-purple-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-purple-100 dark:bg-purple-950/70 border border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-300">
                           {probPct}% Probability of Crossing
                         </span>
 
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-sky-950/70 border border-sky-800 text-sky-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-sky-100 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800 text-sky-800 dark:text-sky-300">
                           {confPct}% Multimodal Confidence
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
-                        <span>Target: <strong className="text-slate-200">{pred.target}</strong></span>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-400">
+                        <span>Target: <strong className="text-slate-800 dark:text-slate-200">{pred.target}</strong></span>
                         <span>•</span>
-                        <span>Room: <strong className="text-slate-200">{pred.room?.name || 'Household Wide'}</strong></span>
+                        <span>Room: <strong className="text-slate-800 dark:text-slate-200">{pred.room?.name || 'Household Wide'}</strong></span>
                         <span>•</span>
-                        <span>Model: <strong className="text-purple-300">{pred.modelName}</strong></span>
+                        <span>Model: <strong className="text-purple-600 dark:text-purple-300">{pred.modelName}</strong></span>
                         <span>•</span>
-                        <span>Horizon: <strong className="text-slate-200">{pred.horizonMinutes}m</strong></span>
+                        <span>Horizon: <strong className="text-slate-800 dark:text-slate-200">{pred.horizonMinutes}m</strong></span>
                         <span>•</span>
-                        <span className="text-amber-400 font-bold">
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">
                           Predicted Lead Time: +{pred.predictedLeadTimeMin} min
                         </span>
                         <span>•</span>
@@ -730,28 +730,39 @@ export default function InsightsPage() {
                     {/* Action Controls */}
                     <div className="flex items-center gap-2 shrink-0">
                       {pred.status === 'PREDICTED' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handlePredictiveStatus(pred.id, 'DISMISSED')}
-                          className="text-xs font-mono text-slate-400 hover:text-slate-200"
-                        >
-                          <X className="w-3.5 h-3.5 mr-1" />
-                          Dismiss Warning
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handlePredictiveStatus(pred.id, 'CONFIRMED')}
+                            className="text-xs font-mono"
+                          >
+                            <Check className="w-3.5 h-3.5 mr-1 text-emerald-500 dark:text-emerald-400" />
+                            Confirm True Positive
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handlePredictiveStatus(pred.id, 'DISMISSED')}
+                            className="text-xs font-mono text-slate-400 hover:text-slate-200"
+                          >
+                            <X className="w-3.5 h-3.5 mr-1" />
+                            Dismiss
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
 
                   {/* Summary & Explainability Statement */}
-                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
                     {pred.summary}
                   </p>
 
                   {/* Verifiable Mathematical Derivation & Forecast Bounds */}
-                  <div className="rounded bg-slate-900/80 p-3.5 border border-slate-800 text-xs font-mono space-y-3">
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-2">
-                      <span className="flex items-center gap-1.5 text-purple-400 font-semibold">
+                  <div className="rounded bg-slate-50 dark:bg-slate-900/80 p-3.5 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-3">
+                    <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <span className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400 font-semibold">
                         <Target className="w-3.5 h-3.5" />
                         <span>Predictive Derivation &amp; Forecast Uncertainty Bounds</span>
                       </span>
@@ -760,43 +771,43 @@ export default function InsightsPage() {
                       </span>
                     </div>
 
-                    <p className="text-xs font-mono text-slate-300 leading-relaxed">
+                    <p className="text-xs font-mono text-slate-700 dark:text-slate-300 leading-relaxed">
                       {pred.explanation}
                     </p>
 
                     {/* Parametric Breakdown Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-2 pt-1">
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">CURRENT VALUE (y_t)</span>
-                        <span className="text-slate-200 font-mono text-xs block mt-0.5">
+                        <span className="text-slate-800 dark:text-slate-200 font-mono text-xs block mt-0.5">
                           {pred.currentValue}
                         </span>
                       </div>
 
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">PREDICTED (ŷ_t+h)</span>
-                        <span className="text-purple-300 font-mono text-xs font-bold block mt-0.5">
+                        <span className="text-purple-600 dark:text-purple-300 font-mono text-xs font-bold block mt-0.5">
                           {pred.predictedValue}
                         </span>
                       </div>
 
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">HAZARD THRESHOLD (T)</span>
-                        <span className="text-rose-400 font-mono text-xs font-bold block mt-0.5">
+                        <span className="text-rose-600 dark:text-rose-400 font-mono text-xs font-bold block mt-0.5">
                           {pred.thresholdValue}
                         </span>
                       </div>
 
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">80% UNCERTAINTY [L, U]</span>
-                        <span className="text-sky-300 font-mono text-xs block mt-0.5">
+                        <span className="text-sky-600 dark:text-sky-300 font-mono text-xs block mt-0.5">
                           {ci80 ? `[${ci80[0]}, ${ci80[1]}]` : 'N/A'}
                         </span>
                       </div>
 
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">95% UNCERTAINTY [L, U]</span>
-                        <span className="text-slate-300 font-mono text-xs block mt-0.5">
+                        <span className="text-slate-800 dark:text-slate-300 font-mono text-xs block mt-0.5">
                           {ci95 ? `[${ci95[0]}, ${ci95[1]}]` : 'N/A'}
                         </span>
                       </div>
@@ -804,29 +815,29 @@ export default function InsightsPage() {
 
                     {/* Ground-Truth Confirmation Trace (If Confirmed) */}
                     {pred.status === 'CONFIRMED' && (
-                      <div className="p-3 bg-emerald-950/30 border border-emerald-800/60 rounded text-xs space-y-1.5">
-                        <div className="flex items-center gap-2 text-emerald-300 font-semibold">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded text-xs space-y-1.5">
+                        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-semibold">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                           <span>Incident Materialization Corroborated: True Positive Anticipation</span>
                         </div>
-                        <p className="text-slate-300">
+                        <p className="text-slate-700 dark:text-slate-300">
                           {pred.confirmedIncident ? (
                             <>
-                              Linked to Phase 2 Incident: <strong className="text-emerald-300">{pred.confirmedIncident.title}</strong>.
+                              Linked to Phase 2 Incident: <strong className="text-emerald-700 dark:text-emerald-300">{pred.confirmedIncident.title}</strong>.
                             </>
                           ) : (
                             <>
                               Sensor crossed hazard threshold {pred.thresholdValue} as anticipated.
                             </>
                           )}
-                          {' '}Advance notice provided: <strong className="text-amber-300">+{pred.actualLeadTimeMin} minutes lead time</strong> before materialization.
+                          {' '}Advance notice provided: <strong className="text-amber-700 dark:text-amber-300">+{pred.actualLeadTimeMin} minutes lead time</strong> before materialization.
                         </p>
                       </div>
                     )}
 
                     {/* Expired / False Alarm Note */}
                     {pred.status === 'EXPIRED' && (
-                      <div className="p-2.5 bg-slate-950 border border-slate-800 rounded text-xs text-slate-400">
+                      <div className="p-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded text-xs text-slate-600 dark:text-slate-400">
                         <span>Prediction horizon expired without threshold crossing. Marked as False Alarm / Successfully Mitigated.</span>
                       </div>
                     )}
@@ -834,12 +845,12 @@ export default function InsightsPage() {
 
                   {/* Contributing Multi-Modal Evidence Matrix */}
                   <div className="space-y-1.5">
-                    <span className="text-[11px] font-mono text-slate-400 font-semibold block">
+                    <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 font-semibold block">
                       Contributing Anticipatory Signals &amp; Evidence Matrix:
                     </span>
-                    <div className="overflow-x-auto border border-slate-800 rounded bg-slate-950">
+                    <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded bg-white dark:bg-slate-950">
                       <table className="w-full text-left text-xs font-mono">
-                        <thead className="bg-slate-900/90 text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                        <thead className="bg-slate-100 dark:bg-slate-900/90 text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                           <tr>
                             <th className="p-2.5">Evidence Channel</th>
                             <th className="p-2.5">Signal Type</th>
@@ -893,7 +904,7 @@ export default function InsightsPage() {
       {activeTab === 'incidents' && (
         <div className="space-y-4">
           {incidents.length === 0 ? (
-            <Card className="text-center py-12 text-slate-500 font-mono text-xs">
+            <Card className="text-center py-12 text-slate-500 font-mono text-xs border-slate-200 dark:border-slate-800">
               No incidents matching filter &quot;{incidentFilter}&quot;. Trigger a scenario above to observe real-time cross-sensor correlation.
             </Card>
           ) : (
@@ -904,25 +915,25 @@ export default function InsightsPage() {
               const confidencePct = Math.round((incident.confidence || 0) * 100);
 
               return (
-                <Card key={incident.id} className="space-y-4 border-slate-800 bg-slate-950/60">
+                <Card key={incident.id} className="space-y-4 border-slate-200 dark:border-slate-800">
                   {/* Header */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {getIncidentIcon(incident.incidentType)}
-                        <span className="text-sm font-bold text-slate-100">{incident.title}</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{incident.title}</span>
                         <Badge variant={getSeverityBadgeVariant(incident.severity)}>
                           {incident.severity}
                         </Badge>
                         <Badge variant={getStatusBadgeVariant(incident.status)}>
                           {incident.status}
                         </Badge>
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-sky-950/70 border border-sky-800 text-sky-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-sky-100 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800 text-sky-800 dark:text-sky-300">
                           {confidencePct}% Mathematical Confidence
                         </span>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
-                        <span>Room: <strong className="text-slate-200">{incident.room?.name || 'Home'}</strong></span>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-400">
+                        <span>Room: <strong className="text-slate-800 dark:text-slate-200">{incident.room?.name || 'Home'}</strong></span>
                         <span>•</span>
                         <span>First Detected: {formatRelativeTime(incident.firstDetectedAt)}</span>
                         <span>•</span>
@@ -930,7 +941,7 @@ export default function InsightsPage() {
                         {incident.resolvedAt && (
                           <>
                             <span>•</span>
-                            <span className="text-emerald-400">Resolved: {formatRelativeTime(incident.resolvedAt)}</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">Resolved: {formatRelativeTime(incident.resolvedAt)}</span>
                           </>
                         )}
                       </div>
@@ -945,7 +956,7 @@ export default function InsightsPage() {
                           onClick={() => handleIncidentStatus(incident.id, 'RESOLVED')}
                           className="text-xs font-mono"
                         >
-                          <Check className="w-3.5 h-3.5 mr-1 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 mr-1 text-emerald-500 dark:text-emerald-400" />
                           Resolve
                         </Button>
                       )}
@@ -964,14 +975,14 @@ export default function InsightsPage() {
                   </div>
 
                   {/* Summary & Explainability Statement */}
-                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
                     {incident.summary}
                   </p>
 
                   {/* Verifiable Mathematical Derivation Box */}
-                  <div className="rounded bg-slate-900/80 p-3 border border-slate-800 text-xs font-mono space-y-2">
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-1.5">
-                      <span className="flex items-center gap-1.5 text-sky-400 font-semibold">
+                  <div className="rounded bg-slate-50 dark:bg-slate-900/80 p-3 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-1.5">
+                      <span className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-semibold">
                         <Info className="w-3.5 h-3.5" />
                         <span>Confidence Formula &amp; Audit Trace</span>
                       </span>
@@ -981,23 +992,23 @@ export default function InsightsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-[11px]">
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">Formula</span>
-                        <span className="text-slate-300 font-mono text-xs block mt-0.5">
+                        <span className="text-slate-800 dark:text-slate-300 font-mono text-xs block mt-0.5">
                           Conf = min(0.99, RawConf × Corroboration)
                         </span>
                       </div>
 
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">Signal Weights (Raw Confidence)</span>
-                        <span className="text-sky-300 font-mono text-xs block mt-0.5">
+                        <span className="text-sky-600 dark:text-sky-300 font-mono text-xs block mt-0.5">
                           Raw = {audit.rawConfidence !== undefined ? audit.rawConfidence : (incident.confidence / (audit.corroborationFactor || 1.0)).toFixed(2)}
                         </span>
                       </div>
 
-                      <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80">
+                      <div className="bg-white dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800/80">
                         <span className="text-[10px] text-slate-500 block uppercase">Sensor Corroboration</span>
-                        <span className="text-emerald-300 font-mono text-xs block mt-0.5">
+                        <span className="text-emerald-600 dark:text-emerald-300 font-mono text-xs block mt-0.5">
                           {distinctCount} distinct physical {distinctCount === 1 ? 'channel' : 'channels'} (factor: {audit.corroborationFactor || (0.7 + 0.1 * Math.max(0, distinctCount - 1)).toFixed(2)})
                         </span>
                       </div>
@@ -1006,12 +1017,12 @@ export default function InsightsPage() {
 
                   {/* Multi-Sensor Evidence Matrix Table */}
                   <div className="space-y-1.5">
-                    <span className="text-[11px] font-mono text-slate-400 font-semibold block">
+                    <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 font-semibold block">
                       Contributing Multi-Sensor Evidence Matrix ({evidenceList.length} signals evaluated):
                     </span>
-                    <div className="overflow-x-auto border border-slate-800 rounded bg-slate-950">
+                    <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded bg-white dark:bg-slate-950">
                       <table className="w-full text-left text-xs font-mono">
-                        <thead className="bg-slate-900/90 text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                        <thead className="bg-slate-100 dark:bg-slate-900/90 text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                           <tr>
                             <th className="p-2.5">Sensor Channel</th>
                             <th className="p-2.5">Observed Value</th>
@@ -1021,7 +1032,7 @@ export default function InsightsPage() {
                             <th className="p-2.5">Observed At</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/60">
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                           {evidenceList.map((e: any, idx: number) => (
                             <tr key={idx} className={e.satisfied ? 'bg-sky-950/10' : 'bg-transparent text-slate-500'}>
                               <td className="p-2.5 font-semibold text-slate-200 flex items-center gap-1.5">
@@ -1124,9 +1135,9 @@ export default function InsightsPage() {
                   </div>
 
                   {/* Verifiable Mathematical Derivation Box */}
-                  <div className="rounded bg-slate-950 p-3.5 border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 border-b border-slate-800/80 pb-1.5">
-                      <span className="flex items-center gap-1 text-sky-400">
+                  <div className="rounded bg-slate-50 dark:bg-slate-950 p-3.5 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800/80 pb-1.5">
+                      <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400">
                         <Info className="w-3.5 h-3.5" />
                         <span>Mathematical Derivation &amp; Audit Evidence</span>
                       </span>
@@ -1135,44 +1146,44 @@ export default function InsightsPage() {
                       </span>
                     </div>
 
-                    <p className="text-xs font-mono text-slate-300 leading-relaxed">
+                    <p className="text-xs font-mono text-slate-700 dark:text-slate-300 leading-relaxed">
                       {insight.explanation}
                     </p>
 
                     {/* Parametric Breakdown Grid */}
                     {!isHeuristic && evidence.baselineMean !== undefined && (
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 pt-2 border-t border-slate-800/60 text-xs font-mono">
-                        <div className="bg-slate-900/60 p-2 rounded">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 text-xs font-mono">
+                        <div className="bg-white dark:bg-slate-900/60 p-2 rounded border border-slate-200 dark:border-transparent">
                           <span className="text-[10px] text-slate-500 block">OBSERVED (x)</span>
-                          <span className="text-slate-200 font-semibold">
+                          <span className="text-slate-900 dark:text-slate-200 font-semibold">
                             {evidence.value || evidence.currentValue} {evidence.unit || ''}
                           </span>
                         </div>
 
-                        <div className="bg-slate-900/60 p-2 rounded">
+                        <div className="bg-white dark:bg-slate-900/60 p-2 rounded border border-slate-200 dark:border-transparent">
                           <span className="text-[10px] text-slate-500 block">BASELINE MEAN (μ)</span>
-                          <span className="text-slate-200 font-semibold">
+                          <span className="text-slate-900 dark:text-slate-200 font-semibold">
                             {evidence.baselineMean} {evidence.unit || ''}
                           </span>
                         </div>
 
-                        <div className="bg-slate-900/60 p-2 rounded">
+                        <div className="bg-white dark:bg-slate-900/60 p-2 rounded border border-slate-200 dark:border-transparent">
                           <span className="text-[10px] text-slate-500 block">STD DEV (σ)</span>
-                          <span className="text-slate-200 font-semibold">
+                          <span className="text-slate-900 dark:text-slate-200 font-semibold">
                             ±{evidence.baselineStdDev} {evidence.unit || ''}
                           </span>
                         </div>
 
-                        <div className="bg-slate-900/60 p-2 rounded">
+                        <div className="bg-white dark:bg-slate-900/60 p-2 rounded border border-slate-200 dark:border-transparent">
                           <span className="text-[10px] text-slate-500 block">Z-SCORE</span>
-                          <span className="text-amber-400 font-semibold font-mono">
+                          <span className="text-amber-600 dark:text-amber-400 font-semibold font-mono">
                             {evidence.zScore > 0 ? `+${evidence.zScore}` : evidence.zScore}
                           </span>
                         </div>
 
-                        <div className="bg-slate-900/60 p-2 rounded">
+                        <div className="bg-white dark:bg-slate-900/60 p-2 rounded border border-slate-200 dark:border-transparent">
                           <span className="text-[10px] text-slate-500 block">DEVIATION (Δ)</span>
-                          <span className="text-rose-400 font-semibold">
+                          <span className="text-rose-600 dark:text-rose-400 font-semibold">
                             {evidence.deviationPercent > 0 ? `+${evidence.deviationPercent}%` : `${evidence.deviationPercent}%`}
                           </span>
                         </div>

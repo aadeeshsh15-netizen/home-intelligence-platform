@@ -247,26 +247,26 @@ export default function ArchitectureVisualizationPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-2 border-b border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Workflow className="w-6 h-6 text-sky-400" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <Workflow className="w-6 h-6 text-sky-500 dark:text-sky-400" />
             12-Stage System Architecture & Closed-Loop Control Flow
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-mono">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-mono">
             Sense → Detect → Correlate → Predict → Anticipate → Decide → Act → Verify → Audit
           </p>
         </div>
 
         <Link
           href="/observability"
-          className="text-xs font-mono text-sky-400 hover:underline flex items-center gap-1"
+          className="text-xs font-mono text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1"
         >
           View System Observability <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
 
       {/* Interactive Pipeline Track */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-4">
-        <div className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">
+      <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+        <div className="text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3">
           Pipeline Flow (Click stage to inspect contract details):
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -281,14 +281,14 @@ export default function ArchitectureVisualizationPage() {
                 className={`p-2.5 rounded text-left transition-all border flex flex-col justify-between ${
                   isSelected
                     ? 'border-sky-500 bg-sky-500/15 shadow-lg shadow-sky-500/10'
-                    : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/60'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/60'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="text-[10px] font-mono text-slate-500 font-bold">STAGE {stage.id}</span>
-                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-sky-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-sky-500 dark:text-sky-400' : 'text-slate-400'}`} />
                 </div>
-                <div className="text-xs font-semibold text-slate-200 mt-1 line-clamp-1">
+                <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1 line-clamp-1">
                   {stage.name}
                 </div>
               </button>
@@ -298,22 +298,22 @@ export default function ArchitectureVisualizationPage() {
       </div>
 
       {/* Selected Stage Detail Card */}
-      <Card className="bg-slate-900/80 border-slate-800">
-        <CardHeader className="pb-3 border-b border-slate-800">
+      <Card className="border-slate-200 dark:border-slate-800">
+        <CardHeader className="pb-3 border-b border-slate-200 dark:border-slate-800">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div className="flex items-center gap-3">
               <span className={`p-2 rounded border font-mono text-xs font-bold ${selectedStage.color}`}>
                 STAGE {selectedStage.id}
               </span>
               <div>
-                <CardTitle className="text-lg font-bold text-white">
+                <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">
                   {selectedStage.name}
                 </CardTitle>
-                <p className="text-xs text-slate-400 mt-0.5">{selectedStage.tagline}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{selectedStage.tagline}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className="font-mono text-[10px] bg-slate-950 text-slate-300 border-slate-800">
+              <Badge className="font-mono text-[10px] bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800">
                 {selectedStage.subsystem}
               </Badge>
             </div>
@@ -322,51 +322,51 @@ export default function ArchitectureVisualizationPage() {
 
         <CardContent className="p-5 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5 bg-slate-950/60 p-3 rounded border border-slate-800">
-              <div className="text-[11px] font-mono uppercase text-slate-400 font-bold flex items-center gap-1.5">
-                <ArrowRight className="w-3 h-3 text-sky-400" /> Inputs & Wire Contract
+            <div className="space-y-1.5 bg-slate-50 dark:bg-slate-950/60 p-3 rounded border border-slate-200 dark:border-slate-800">
+              <div className="text-[11px] font-mono uppercase text-slate-600 dark:text-slate-400 font-bold flex items-center gap-1.5">
+                <ArrowRight className="w-3 h-3 text-sky-500 dark:text-sky-400" /> Inputs & Wire Contract
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed font-mono">
+              <p className="text-xs text-slate-800 dark:text-slate-300 leading-relaxed font-mono">
                 {selectedStage.inputs}
               </p>
             </div>
 
-            <div className="space-y-1.5 bg-slate-950/60 p-3 rounded border border-slate-800">
-              <div className="text-[11px] font-mono uppercase text-slate-400 font-bold flex items-center gap-1.5">
-                <ArrowRight className="w-3 h-3 text-emerald-400" /> Outputs & Downstream Handshake
+            <div className="space-y-1.5 bg-slate-50 dark:bg-slate-950/60 p-3 rounded border border-slate-200 dark:border-slate-800">
+              <div className="text-[11px] font-mono uppercase text-slate-600 dark:text-slate-400 font-bold flex items-center gap-1.5">
+                <ArrowRight className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> Outputs & Downstream Handshake
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed font-mono">
+              <p className="text-xs text-slate-800 dark:text-slate-300 leading-relaxed font-mono">
                 {selectedStage.outputs}
               </p>
             </div>
           </div>
 
-          <div className="space-y-1.5 bg-slate-950/60 p-3 rounded border border-slate-800">
-            <div className="text-[11px] font-mono uppercase text-slate-400 font-bold flex items-center gap-1.5">
-              <Brain className="w-3 h-3 text-purple-400" /> Algorithmic Methodology
+          <div className="space-y-1.5 bg-slate-50 dark:bg-slate-950/60 p-3 rounded border border-slate-200 dark:border-slate-800">
+            <div className="text-[11px] font-mono uppercase text-slate-600 dark:text-slate-400 font-bold flex items-center gap-1.5">
+              <Brain className="w-3 h-3 text-purple-500 dark:text-purple-400" /> Algorithmic Methodology
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-800 dark:text-slate-300 leading-relaxed">
               {selectedStage.algorithm}
             </p>
           </div>
 
-          <div className="space-y-2 bg-slate-950/60 p-3 rounded border border-slate-800">
-            <div className="text-[11px] font-mono uppercase text-slate-400 font-bold flex items-center gap-1.5">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" /> Architectural Invariants & Guarantees
+          <div className="space-y-2 bg-slate-50 dark:bg-slate-950/60 p-3 rounded border border-slate-200 dark:border-slate-800">
+            <div className="text-[11px] font-mono uppercase text-slate-600 dark:text-slate-400 font-bold flex items-center gap-1.5">
+              <ShieldCheck className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> Architectural Invariants & Guarantees
             </div>
-            <ul className="space-y-1 text-xs text-slate-300">
+            <ul className="space-y-1 text-xs text-slate-800 dark:text-slate-300">
               {selectedStage.invariants.map((inv, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <span>{inv}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="flex items-center justify-between text-xs font-mono text-slate-500 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs font-mono text-slate-500 pt-2 border-t border-slate-200 dark:border-slate-800">
             <span>Primary Code Implementation:</span>
-            <span className="text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+            <span className="text-sky-600 dark:text-sky-400 bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               {selectedStage.keyFile}
             </span>
           </div>

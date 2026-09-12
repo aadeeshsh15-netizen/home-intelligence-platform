@@ -171,10 +171,10 @@ describe('Predictive Incident Intelligence Engine - 8 Controlled Benchmark Scena
     const testTime = new Date('2026-06-15T14:30:00Z');
 
     // Setup: AC is off (power 45W standby), room is already cool at 21.5°C
-    if (lrPower) await prisma.sensor.update({ where: { id: lrPower.id }, data: { lastReadingValue: 45, lastReadingTime: testTime } });
-    if (lrTemp) await prisma.sensor.update({ where: { id: lrTemp.id }, data: { lastReadingValue: 21.5, lastReadingTime: testTime } });
+    await prisma.sensor.updateMany({ where: { room: { floor: { homeId: home.id } }, type: SensorType.POWER }, data: { lastReadingValue: 45, lastReadingTime: testTime } });
+    await prisma.sensor.updateMany({ where: { roomId: livingRoom.id, type: SensorType.TEMPERATURE }, data: { lastReadingValue: 21.5, lastReadingTime: testTime } });
 
-    const candidate = await RulePredictedACFailure.evaluate({ homeId: home.id, currentTimestamp: testTime });
+    const candidate = await RulePredictedACFailure.evaluate({ homeId: home.id, roomId: livingRoom.id, currentTimestamp: testTime });
 
     const triggered = candidate !== null;
     const passed = !triggered;

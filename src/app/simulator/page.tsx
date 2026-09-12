@@ -155,13 +155,13 @@ export default function SimulatorStudioPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-100">Telemetry Simulator Studio</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Telemetry Simulator Studio</h1>
             <Badge variant="info">Producer Engine</Badge>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-mono mt-1">
             Physical thermodynamic simulation controls and intentional anomaly injection
           </p>
         </div>
@@ -177,7 +177,7 @@ export default function SimulatorStudioPage() {
       </div>
 
       {/* Control Panel Bar */}
-      <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-lg flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-lg flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {status.isRunning ? (
             <Button variant="danger" onClick={handleStop} disabled={loading} className="text-xs font-mono">
@@ -198,9 +198,9 @@ export default function SimulatorStudioPage() {
         </div>
 
         {lastTick && (
-          <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
+          <div className="text-xs font-mono text-slate-600 dark:text-slate-400 flex items-center gap-2">
             <span className="text-slate-500">LAST TELEMETRY INGEST:</span>
-            <span className="text-sky-400 font-semibold">
+            <span className="text-sky-600 dark:text-sky-400 font-semibold">
               {lastTick.roomName} • {lastTick.type}: {lastTick.value} {lastTick.unit}
             </span>
           </div>
@@ -212,21 +212,21 @@ export default function SimulatorStudioPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 text-amber-400" />
+              <FlaskConical className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               <CardTitle>Physical Anomaly Injection</CardTitle>
             </div>
           </CardHeader>
-          <p className="text-xs text-slate-400 mb-4">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
             Select a target room and thermodynamic or electrical disturbance to observe the real-time pipeline and intelligence layer reaction:
           </p>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-mono text-slate-400">Target Household Room:</label>
+              <label className="text-xs font-mono text-slate-600 dark:text-slate-400">Target Household Room:</label>
               <select
                 value={selectedRoomId}
                 onChange={(e) => setSelectedRoomId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-slate-200"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded p-2 text-xs font-mono text-slate-900 dark:text-slate-200"
               >
                 {rooms.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -237,11 +237,11 @@ export default function SimulatorStudioPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-mono text-slate-400">Disturbance Phenomenon:</label>
+              <label className="text-xs font-mono text-slate-600 dark:text-slate-400">Disturbance Phenomenon:</label>
               <select
                 value={selectedAnomalyType}
                 onChange={(e) => setSelectedAnomalyType(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-slate-200"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded p-2 text-xs font-mono text-slate-900 dark:text-slate-200"
               >
                 <option value="COOKING_EVENT">COOKING_EVENT: Multi-sensor culinary load (Power + Temp + PM2.5 + Occupancy)</option>
                 <option value="WATER_LEAK">WATER_LEAK: Continuous pipe flow + moisture saturation (Unoccupied)</option>
@@ -392,11 +392,11 @@ export default function SimulatorStudioPage() {
                   return (
                     <div
                       key={`${anom.roomId}_${anom.type}`}
-                      className="flex items-center justify-between p-2.5 rounded bg-slate-950 border border-amber-900/60 text-xs font-mono"
+                      className="flex items-center justify-between p-2.5 rounded bg-amber-50 dark:bg-slate-950 border border-amber-200 dark:border-amber-900/60 text-xs font-mono"
                     >
                       <div>
-                        <span className="text-amber-300 font-bold block">{anom.type}</span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-amber-800 dark:text-amber-300 font-bold block">{anom.type}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">
                           Target: {room?.name || anom.roomId}
                         </span>
                       </div>
@@ -404,7 +404,7 @@ export default function SimulatorStudioPage() {
                         size="sm"
                         variant="secondary"
                         onClick={() => handleClearAnomaly(anom.roomId, anom.type)}
-                        className="text-[10px] font-mono text-rose-400 hover:text-rose-300"
+                        className="text-[10px] font-mono text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300"
                       >
                         Clear
                       </Button>
@@ -420,9 +420,9 @@ export default function SimulatorStudioPage() {
             <CardHeader>
               <CardTitle>Simulator Engine Telemetry Stream Log</CardTitle>
             </CardHeader>
-            <div className="bg-slate-950 rounded p-3 font-mono text-[11px] text-slate-400 h-44 overflow-y-auto space-y-1 border border-slate-800">
+            <div className="bg-slate-50 dark:bg-slate-950 rounded p-3 font-mono text-[11px] text-slate-700 dark:text-slate-400 h-44 overflow-y-auto space-y-1 border border-slate-200 dark:border-slate-800">
               {logMessages.length === 0 ? (
-                <span className="text-slate-600">Engine events will log here in real time...</span>
+                <span className="text-slate-500">Engine events will log here in real time...</span>
               ) : (
                 logMessages.map((msg, i) => <div key={i}>{msg}</div>)
               )}

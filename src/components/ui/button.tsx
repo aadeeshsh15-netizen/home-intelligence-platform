@@ -14,11 +14,14 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variantStyles = {
-    primary: 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold shadow-sm',
-    secondary: 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700',
-    danger: 'bg-rose-600 hover:bg-rose-500 text-white font-medium',
-    ghost: 'bg-transparent hover:bg-slate-800 text-slate-400 hover:text-slate-200',
-    outline: 'bg-transparent border border-slate-700 hover:border-slate-500 text-slate-300',
+    primary: 'bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-xs transition-colors',
+    secondary:
+      'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 transition-colors',
+    danger: 'bg-rose-600 hover:bg-rose-500 text-white font-medium transition-colors',
+    ghost:
+      'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors',
+    outline:
+      'bg-transparent border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors',
   };
 
   const sizeStyles = {

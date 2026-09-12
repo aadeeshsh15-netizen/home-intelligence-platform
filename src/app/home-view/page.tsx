@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useRealtimeTelemetry, TelemetryTick } from '@/lib/useRealtimeTelemetry';
 import { formatMetricValue, formatRelativeTime } from '@/lib/formatters';
 import Link from 'next/link';
+import { useTheme } from '@/lib/theme';
 import {
   Layers,
   Thermometer,
@@ -24,6 +25,7 @@ export default function HomeViewPage() {
   const [selectedFloorIndex, setSelectedFloorIndex] = useState(0);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isDark } = useTheme();
 
   // Live telemetry updates handler
   const handleTick = useCallback((tick: TelemetryTick) => {
@@ -86,19 +88,19 @@ export default function HomeViewPage() {
   return (
     <div className="space-y-6">
       {/* Header & Floor Switcher */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-100">Interactive Home View</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Interactive Home View</h1>
             <Badge variant="info">Digital Twin</Badge>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
             Spatial 2D schematic with continuous sensor mapping and occupancy states
           </p>
         </div>
 
         {/* Floor Level Switcher */}
-        <div className="flex items-center bg-slate-900 border border-slate-800 rounded p-1 gap-1">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-1 gap-1">
           {floors.map((floor, idx) => (
             <button
               key={floor.id}
@@ -108,8 +110,8 @@ export default function HomeViewPage() {
               }}
               className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono transition-colors cursor-pointer ${
                 selectedFloorIndex === idx
-                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/40 font-semibold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -122,22 +124,22 @@ export default function HomeViewPage() {
       {/* Main Floor-Plan Canvas & Room Inspector Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 2D Floor Plan Canvas */}
-        <div className="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-lg p-6 relative overflow-hidden min-h-[500px]">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-6 relative overflow-hidden min-h-[500px]">
           {/* Floor Plan Header */}
-          <div className="flex items-center justify-between mb-4 text-xs font-mono text-slate-500">
+          <div className="flex items-center justify-between mb-4 text-xs font-mono text-slate-500 dark:text-slate-400">
             <span>LEVEL {activeFloor.level} // {activeFloor.name.toUpperCase()}</span>
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Occupied
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Occupied
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-slate-700" /> Vacant
+                <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700" /> Vacant
               </span>
             </div>
           </div>
 
           {/* SVG Floor Plan Schematic */}
-          <div className="relative w-full aspect-4/3 bg-slate-900/40 border border-slate-800/80 rounded-md p-4">
+          <div className="relative w-full aspect-4/3 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-md p-4">
             <svg
               viewBox="0 0 100 100"
               className="w-full h-full"
@@ -145,7 +147,12 @@ export default function HomeViewPage() {
             >
               <defs>
                 <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#1e293b" strokeWidth="0.4" />
+                  <path
+                    d="M 10 0 L 0 0 0 10"
+                    fill="none"
+                    stroke={isDark ? '#1e293b' : '#e2e8f0'}
+                    strokeWidth="0.4"
+                  />
                 </pattern>
               </defs>
               <rect width="100" height="100" fill="url(#grid)" />
@@ -157,7 +164,7 @@ export default function HomeViewPage() {
                 width="96"
                 height="94"
                 fill="none"
-                stroke="#334155"
+                stroke={isDark ? '#334155' : '#cbd5e1'}
                 strokeWidth="1"
                 strokeDasharray="2 1"
               />
@@ -184,10 +191,10 @@ export default function HomeViewPage() {
                       rx="1"
                       className={`transition-colors ${
                         isSelected
-                          ? 'fill-sky-950/70 stroke-sky-400 stroke-[1.2]'
+                          ? 'fill-sky-100 dark:fill-sky-950/70 stroke-sky-500 dark:stroke-sky-400 stroke-[1.2]'
                           : isOccupied
-                          ? 'fill-emerald-950/30 hover:fill-slate-800/60 stroke-emerald-800/80 stroke-[0.8]'
-                          : 'fill-slate-900/80 hover:fill-slate-800/60 stroke-slate-700 stroke-[0.6]'
+                          ? 'fill-emerald-50 dark:fill-emerald-950/30 hover:fill-emerald-100 dark:hover:fill-slate-800/60 stroke-emerald-500 dark:stroke-emerald-800/80 stroke-[0.8]'
+                          : 'fill-slate-100 dark:fill-slate-900/80 hover:fill-slate-200 dark:hover:fill-slate-800/60 stroke-slate-300 dark:stroke-slate-700 stroke-[0.6]'
                       }`}
                     />
 
@@ -195,7 +202,7 @@ export default function HomeViewPage() {
                     <text
                       x={room.layout.x + 3}
                       y={room.layout.y + 6}
-                      fill={isSelected ? '#38bdf8' : '#e2e8f0'}
+                      fill={isSelected ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#e2e8f0' : '#0f172a')}
                       fontSize="3.2"
                       fontWeight="600"
                       fontFamily="system-ui"
@@ -208,7 +215,7 @@ export default function HomeViewPage() {
                       <text
                         x={room.layout.x + 3}
                         y={room.layout.y + 12}
-                        fill="#94a3b8"
+                        fill={isDark ? '#94a3b8' : '#475569'}
                         fontSize="2.8"
                         fontFamily="monospace"
                       >
@@ -220,7 +227,7 @@ export default function HomeViewPage() {
                       <text
                         x={room.layout.x + 3}
                         y={room.layout.y + 17}
-                        fill="#cbd5e1"
+                        fill={isDark ? '#cbd5e1' : '#64748b'}
                         fontSize="2.8"
                         fontFamily="monospace"
                       >
@@ -234,7 +241,7 @@ export default function HomeViewPage() {
                         cx={room.layout.x + room.layout.w - 4}
                         cy={room.layout.y + 5}
                         r="1.8"
-                        fill="#34d399"
+                        fill={isDark ? '#34d399' : '#059669'}
                         className="animate-pulse"
                       />
                     )}
@@ -277,13 +284,13 @@ export default function HomeViewPage() {
 
               {/* Live Environmental Matrix */}
               <div className="space-y-3">
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Realtime Sensor Telemetry
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800">
+                  <div className="bg-slate-50 dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800">
                     <span className="text-slate-500 block text-[10px]">TEMPERATURE</span>
-                    <span className="text-slate-100 font-bold text-base">
+                    <span className="text-slate-900 dark:text-slate-100 font-bold text-base">
                       {selectedRoom.metrics?.temperature?.value !== undefined
                         ? `${selectedRoom.metrics.temperature.value.toFixed(1)}°C`
                         : '—'}
@@ -293,9 +300,9 @@ export default function HomeViewPage() {
                     </span>
                   </div>
 
-                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800">
+                  <div className="bg-slate-50 dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800">
                     <span className="text-slate-500 block text-[10px]">HUMIDITY</span>
-                    <span className="text-slate-100 font-bold text-base">
+                    <span className="text-slate-900 dark:text-slate-100 font-bold text-base">
                       {selectedRoom.metrics?.humidity?.value !== undefined
                         ? `${Math.round(selectedRoom.metrics.humidity.value)}%`
                         : '—'}
@@ -305,9 +312,9 @@ export default function HomeViewPage() {
                     </span>
                   </div>
 
-                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800">
+                  <div className="bg-slate-50 dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800">
                     <span className="text-slate-500 block text-[10px]">CO₂ / AIR</span>
-                    <span className="text-slate-100 font-bold text-base">
+                    <span className="text-slate-900 dark:text-slate-100 font-bold text-base">
                       {selectedRoom.metrics?.co2?.value !== undefined
                         ? `${Math.round(selectedRoom.metrics.co2.value)} ppm`
                         : '—'}
@@ -317,9 +324,9 @@ export default function HomeViewPage() {
                     </span>
                   </div>
 
-                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800">
+                  <div className="bg-slate-50 dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800">
                     <span className="text-slate-500 block text-[10px]">POWER LOAD</span>
-                    <span className="text-slate-100 font-bold text-base">
+                    <span className="text-slate-900 dark:text-slate-100 font-bold text-base">
                       {selectedRoom.metrics?.power?.value !== undefined
                         ? `${Math.round(selectedRoom.metrics.power.value)} W`
                         : '—'}
@@ -331,9 +338,9 @@ export default function HomeViewPage() {
                 </div>
 
                 {/* Connected Hardware Devices */}
-                <div className="pt-2 border-t border-slate-800">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Connected Devices ({selectedRoom.devices?.length || 0})
                     </span>
                   </div>
@@ -341,10 +348,10 @@ export default function HomeViewPage() {
                     {selectedRoom.devices?.map((dev: any) => (
                       <div
                         key={dev.id}
-                        className="flex items-center justify-between p-2 rounded bg-slate-950 border border-slate-800 text-xs font-mono"
+                        className="flex items-center justify-between p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono"
                       >
                         <div>
-                          <span className="text-slate-200 font-medium block">{dev.name}</span>
+                          <span className="text-slate-900 dark:text-slate-200 font-medium block">{dev.name}</span>
                           <span className="text-[10px] text-slate-500">
                             {dev.identifier} • {dev.protocol}
                           </span>

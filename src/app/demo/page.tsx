@@ -246,14 +246,14 @@ export default function DemoConsolePage() {
                 key={stage.id}
                 className={`p-2.5 rounded border text-center flex flex-col items-center justify-center transition-all ${
                   isStagePassed
-                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
                     : isStageActive
-                    ? 'border-sky-500 bg-sky-500/20 text-sky-200 ring-1 ring-sky-500 shadow-md animate-pulse'
-                    : 'border-slate-800 bg-slate-950/50 text-slate-500'
+                    ? 'border-sky-500 bg-sky-500/20 text-sky-800 dark:text-sky-200 ring-1 ring-sky-500 shadow-md animate-pulse'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-slate-500'
                 }`}
               >
                 <Icon className={`w-4 h-4 mb-1 ${
-                  isStagePassed ? 'text-emerald-400' : isStageActive ? 'text-sky-300' : 'text-slate-600'
+                  isStagePassed ? 'text-emerald-600 dark:text-emerald-400' : isStageActive ? 'text-sky-600 dark:text-sky-300' : 'text-slate-400 dark:text-slate-600'
                 }`} />
                 <div className="text-[11px] font-bold tracking-tight">{stage.label}</div>
                 <div className="text-[9px] font-mono opacity-75 mt-0.5">{stage.desc}</div>
@@ -265,7 +265,7 @@ export default function DemoConsolePage() {
 
       {/* SCENARIO SELECTION GRID */}
       <div>
-        <h2 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">
+        <h2 className="text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3">
           Controlled Presentation Scenarios:
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -283,14 +283,14 @@ export default function DemoConsolePage() {
                 className={`p-3 rounded text-left transition-all border flex flex-col justify-between ${
                   isSelected
                     ? 'border-sky-500 bg-sky-500/15 shadow-lg shadow-sky-500/10'
-                    : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
                 <div>
-                  <Badge className="font-mono text-[9px] bg-slate-950 text-slate-400 border-slate-800 mb-1.5">
+                  <Badge className="font-mono text-[9px] bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 mb-1.5">
                     {sc.category}
                   </Badge>
-                  <div className="text-xs font-bold text-white leading-snug">{sc.title}</div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white leading-snug">{sc.title}</div>
                 </div>
                 <div className="text-[10px] font-mono text-slate-500 mt-2 flex items-center justify-between">
                   <span>{sc.steps.length} steps</span>
@@ -303,27 +303,27 @@ export default function DemoConsolePage() {
       </div>
 
       {/* ACTIVE SCENARIO RUNNER & CONTROLS */}
-      <Card className="bg-slate-900/80 border-slate-800">
-        <CardHeader className="pb-4 border-b border-slate-800">
+      <Card className="border-slate-200 dark:border-slate-800">
+        <CardHeader className="pb-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5">
-                <CardTitle className="text-base font-bold text-white">
+                <CardTitle className="text-base font-bold text-slate-900 dark:text-white">
                   {activeScenario?.title}
                 </CardTitle>
                 <Badge
                   className={`font-mono text-[10px] ${
                     isCompleted
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                       : isRunning
-                      ? 'bg-sky-500/10 text-sky-400 border-sky-500/30 animate-pulse'
-                      : 'bg-slate-800 text-slate-300'
+                      ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 animate-pulse'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                   }`}
                 >
                   {runnerStatus?.status || 'IDLE'}
                 </Badge>
               </div>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
                 {activeScenario?.description}
               </p>
             </div>
@@ -335,7 +335,7 @@ export default function DemoConsolePage() {
                 size="sm"
                 onClick={() => handleStart(activeScenario.id)}
                 disabled={actionLoading}
-                className="bg-slate-950 border-slate-700 text-slate-200 text-xs"
+                className="bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs"
               >
                 <Play className="w-3.5 h-3.5 mr-1" /> Start
               </Button>
@@ -353,7 +353,7 @@ export default function DemoConsolePage() {
                 size="sm"
                 onClick={() => handleAutoRun(activeScenario.id)}
                 disabled={actionLoading}
-                className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs"
+                className="bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs"
               >
                 <PlayCircle className="w-3.5 h-3.5 mr-1" /> Auto-Play All
               </Button>
@@ -362,7 +362,7 @@ export default function DemoConsolePage() {
                 size="sm"
                 onClick={handleReset}
                 disabled={actionLoading}
-                className="border-slate-800 bg-slate-950 text-slate-400 text-xs"
+                className="border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 text-xs"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </Button>
@@ -373,7 +373,7 @@ export default function DemoConsolePage() {
         <CardContent className="p-5 space-y-6">
           {/* STEP PROGRESS TRACK */}
           <div className="space-y-3">
-            <div className="text-xs font-mono uppercase tracking-wider text-slate-400">
+            <div className="text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Deterministic Step Execution Progression:
             </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -386,31 +386,31 @@ export default function DemoConsolePage() {
                     key={st.stepIndex}
                     className={`p-3 rounded border text-xs flex flex-col justify-between transition-all ${
                       isStepCompleted
-                        ? 'border-emerald-500/30 bg-emerald-500/5 text-slate-300'
+                        ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/5 text-slate-800 dark:text-slate-300'
                         : isStepActive
-                        ? 'border-sky-500 bg-sky-500/10 text-white ring-1 ring-sky-500/50 shadow-md'
-                        : 'border-slate-800 bg-slate-950/40 text-slate-500'
+                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-500/10 text-slate-900 dark:text-white ring-1 ring-sky-500/50 shadow-md'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-slate-500'
                     }`}
                   >
                     <div>
                       <div className="flex items-center justify-between font-mono text-[10px] mb-1">
                         <span>STEP {st.stepIndex}</span>
                         {isStepCompleted ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                         ) : isStepActive ? (
-                          <Activity className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+                          <Activity className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 animate-pulse" />
                         ) : (
-                          <Clock className="w-3.5 h-3.5 text-slate-600" />
+                          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" />
                         )}
                       </div>
-                      <div className="font-semibold text-slate-200">{st.title}</div>
-                      <div className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                      <div className="font-semibold text-slate-900 dark:text-slate-200">{st.title}</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
                         {st.description}
                       </div>
                     </div>
 
-                    <div className="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
-                      Outcome: <span className="text-sky-300">{st.expectedOutcome}</span>
+                    <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800/60 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                      Outcome: <span className="text-sky-600 dark:text-sky-300">{st.expectedOutcome}</span>
                     </div>
                   </div>
                 );
@@ -420,18 +420,18 @@ export default function DemoConsolePage() {
 
           {/* STEP RESULT & REALTIME TELEMETRY INSPECTOR */}
           {stepResult && (
-            <div className="bg-slate-950/80 rounded border border-slate-800 p-4 space-y-3">
+            <div className="bg-slate-50 dark:bg-slate-950/80 rounded border border-slate-200 dark:border-slate-800 p-4 space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="text-xs font-mono text-sky-400 font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <div className="text-xs font-mono text-sky-600 dark:text-sky-400 font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                   Step Execution Real-Time Ingestion Summary
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-slate-900 text-slate-300 font-mono text-[10px]">
+                  <Badge className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 font-mono text-[10px]">
                     Processed {stepResult.ingestionSummary?.processedCount || 0} readings
                   </Badge>
                   <Link href="/observability">
-                    <Button variant="outline" size="sm" className="h-6 text-[10px] bg-slate-900 border-slate-700 text-sky-400 hover:text-sky-300">
+                    <Button variant="outline" size="sm" className="h-6 text-[10px] bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
                       Trace in Observability →
                     </Button>
                   </Link>
@@ -439,33 +439,33 @@ export default function DemoConsolePage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
-                <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
+                <div className="bg-white dark:bg-slate-900 p-2.5 rounded border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500">Telemetry Injected:</span>
-                  <div className="text-slate-200 mt-1">
+                  <div className="text-slate-800 dark:text-slate-200 mt-1">
                     {stepResult.stepDetails?.telemetry?.map((t: any, i: number) => (
                       <div key={i} className="flex justify-between">
-                        <span className="text-slate-400">{t.sensorType}:</span>
-                        <span className="text-sky-400 font-bold">{t.value} {t.unit}</span>
+                        <span className="text-slate-600 dark:text-slate-400">{t.sensorType}:</span>
+                        <span className="text-sky-600 dark:text-sky-400 font-bold">{t.value} {t.unit}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
+                <div className="bg-white dark:bg-slate-900 p-2.5 rounded border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500">Pipeline Ingestion & State:</span>
-                  <div className="text-slate-200 mt-1 space-y-1">
-                    <div>Anomalies Detected: <span className="text-amber-400">{stepResult.ingestionSummary?.anomaliesDetected || 0}</span></div>
-                    <div>Causal Events Logged: <span className="text-sky-400">{stepResult.ingestionSummary?.eventsTriggered || 0}</span></div>
-                    <div>Audit Trace: <span className="text-emerald-400">Recorded</span></div>
+                  <div className="text-slate-800 dark:text-slate-200 mt-1 space-y-1">
+                    <div>Anomalies Detected: <span className="text-amber-600 dark:text-amber-400">{stepResult.ingestionSummary?.anomaliesDetected || 0}</span></div>
+                    <div>Causal Events Logged: <span className="text-sky-600 dark:text-sky-400">{stepResult.ingestionSummary?.eventsTriggered || 0}</span></div>
+                    <div>Audit Trace: <span className="text-emerald-600 dark:text-emerald-400">Recorded</span></div>
                   </div>
                 </div>
 
-                <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
+                <div className="bg-white dark:bg-slate-900 p-2.5 rounded border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500">Expected Effect & Verification:</span>
-                  <div className="text-emerald-400 mt-1 leading-snug">
+                  <div className="text-emerald-600 dark:text-emerald-400 mt-1 leading-snug">
                     {stepResult.stepDetails?.expectedOutcome}
                   </div>
-                  <div className="mt-2 pt-1 border-t border-slate-800 text-[10px] text-slate-400">
+                  <div className="mt-2 pt-1 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400">
                     Fail-closed guardrails active · Idempotent
                   </div>
                 </div>

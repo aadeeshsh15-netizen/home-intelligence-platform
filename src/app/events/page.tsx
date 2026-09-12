@@ -68,10 +68,10 @@ export default function EventsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">Event Stream & Audit Log</h1>
-          <p className="text-xs text-slate-400 font-mono mt-1">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Event Stream & Audit Log</h1>
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-mono mt-1">
             Structured rule breaches, device state transitions, and environmental alerts
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function EventsPage() {
       </div>
 
       {/* Filters Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/60 border border-slate-800 p-3 rounded-lg">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-3 rounded-lg">
         {/* Status Filter */}
         <div className="flex items-center gap-1.5 text-xs font-mono">
           <span className="text-slate-500 uppercase mr-1">Status:</span>
@@ -95,8 +95,8 @@ export default function EventsPage() {
               onClick={() => setStatusFilter(st)}
               className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
                 statusFilter === st
-                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/40 font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800'
               }`}
             >
               {st}
@@ -113,8 +113,8 @@ export default function EventsPage() {
               onClick={() => setSeverityFilter(sev)}
               className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
                 severityFilter === sev
-                  ? 'bg-slate-700 text-slate-100 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800'
               }`}
             >
               {sev || 'ALL'}
@@ -130,7 +130,7 @@ export default function EventsPage() {
             Querying event ledger...
           </div>
         ) : events.length === 0 ? (
-          <Card className="text-center py-12 text-slate-500 font-mono text-xs">
+          <Card className="text-center py-12 text-slate-500 font-mono text-xs border-slate-200 dark:border-slate-800">
             No events match the selected filter criteria.
           </Card>
         ) : (
@@ -143,8 +143,8 @@ export default function EventsPage() {
                 key={event.id}
                 className={`transition-colors ${
                   isCritical && !isResolved
-                    ? 'border-red-800/80 bg-red-950/20'
-                    : 'bg-slate-950/80'
+                    ? 'border-red-300 dark:border-red-800/80 bg-red-50 dark:bg-red-950/20'
+                    : 'border-slate-200 dark:border-slate-800'
                 }`}
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -165,17 +165,17 @@ export default function EventsPage() {
                       >
                         {event.severity}
                       </Badge>
-                      <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 uppercase">
+                      <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 uppercase">
                         {event.category}
                       </span>
-                      <h3 className="text-sm font-bold text-slate-200">{event.title}</h3>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200">{event.title}</h3>
                     </div>
 
-                    <p className="text-xs text-slate-300">{event.description}</p>
+                    <p className="text-xs text-slate-700 dark:text-slate-300">{event.description}</p>
 
                     {/* Context Data Metadata */}
                     {event.contextData && (
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded border border-slate-800/60 w-fit">
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-800/60 w-fit">
                         {event.contextData.value !== undefined && (
                           <span>Observed: {event.contextData.value} {event.contextData.unit}</span>
                         )}
