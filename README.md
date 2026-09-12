@@ -2,7 +2,7 @@
 
 [![CI Status](https://github.com/aadeeshsh15-netizen/home-intelligence-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/aadeeshsh15-netizen/home-intelligence-platform/actions)
 [![Release](https://img.shields.io/badge/release-v1.0.0-blue.svg)](docs/releases/v1.0.0.md)
-[![Tests](https://img.shields.io/badge/tests-178%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-194%20passed-brightgreen.svg)](tests/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](tsconfig.json)
 [![Next.js](https://img.shields.io/badge/Next.js-15.1%20App%20Router-black?logo=next.js)](next.config.ts)
 [![Docker](https://img.shields.io/badge/Docker-Production%20Stack-2496ED?logo=docker)](docker-compose.prod.yml)
@@ -22,7 +22,7 @@
 | **How does it work?** | Executes an autonomous 12-stage operational pipeline: **Sense $\to$ Ingest $\to$ Validate $\to$ Detect $\to$ Correlate $\to$ Predict $\to$ Anticipate $\to$ Decide $\to$ Interlock $\to$ Act $\to$ Verify $\to$ Audit**. |
 | **What technologies are used?** | **Full-Stack TypeScript**: Next.js 15 App Router, React 19, Tailwind CSS, PostgreSQL, Prisma ORM, Eclipse Mosquitto MQTT, ESP32 C++/PlatformIO, in-process Gradient Boosted Decision Trees (GBDT), Docker Compose, and Vitest. |
 | **What was physically tested?** | Real **ESP32 DevKit v1** hardware running DHT22 (temp/humidity), HC-SR501 PIR (occupancy), and magnetic reed switches over 2.4 GHz Wi-Fi and MQTT QoS 1 across 8 hardware acceptance gates. |
-| **What are the measured results?** | **-28.1% RMSE reduction** over statistical baselines, **0.00% false-positive rate** under clean baseline suites, sub-9ms GBDT inference, and **178/178 tests passing**. |
+| **What are the measured results?** | **-28.1% RMSE reduction** over statistical baselines, **0.00% false-positive rate** under clean baseline suites, sub-9ms GBDT inference, and **194/194 tests passing**. |
 | **How do I run it?** | `cp .env.example .env && npm run bootstrap && npm run dev` |
 | **How do I demo it?** | Run `npm run demo` and open `http://localhost:3000/demo` for an interactive 2-minute deterministic presentation runner. |
 
@@ -174,7 +174,7 @@ For complete production deployment instructions including Caddy reverse proxy an
 | Metric / Gate | Measurement / SLA | Verification Command |
 | :--- | :--- | :--- |
 | **Static Typecheck** | **0 Errors** (100% clean) | `npx tsc --noEmit` |
-| **Test Suite** | **41 / 41 files passed (178 / 178 tests)** | `npm test -- --fileParallelism=false` |
+| **Test Suite** | **43 / 43 files passed (194 / 194 tests)** | `npm test -- --fileParallelism=false` |
 | **Production Build** | **22 UI pages, 37 API routes generated** | `npm run build` |
 | **Ingestion SLA** | $p50 < 10\,\text{ms},\; p95 < 25\,\text{ms}$ | Measured live in `/observability` |
 | **Inference SLA** | $p50 < 9\,\text{ms},\; p95 < 15\,\text{ms}$ | Measured live in `/observability` |
@@ -187,14 +187,7 @@ For complete production deployment instructions including Caddy reverse proxy an
 1. **In-Memory Single-Node State**: Sliding latency windows and rate limiters operate in process memory; multi-instance horizontal clustering requires Redis for shared rate limiting.
 2. **Low-Voltage Actuator Scope**: Safety policy explicitly restricts automated commands to low-voltage actuators (relays, smart plugs, dampers). Mains-voltage electrical switching is deliberately excluded to prevent physical safety hazards.
 3. **Tree Size Budget**: GBDT models are constrained to 50 trees (depth 4) to ensure sub-10ms inference times on serverless and edge nodes.
-
----
-
-## 🗺️ Future Roadmap
-
-- [ ] **Phase 11**: Distributed Redis state backend for multi-instance cluster rate limiting and shared metrics.
-- [ ] **Phase 12**: Matter / Thread protocol bridge expanding local mesh device integration.
-- [ ] **Phase 13**: On-device edge tinyML model inference for offline microcontrollers.
+4. **Known UI Limitation (Floor Switcher)**: The Floor 1 / First Floor selector in the digital twin visualization is currently a non-functional presentation control. The underlying room telemetry, interactive room hotspots, environmental sensing, and digital-twin visualization remain fully operational.
 
 ---
 
