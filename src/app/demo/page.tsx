@@ -170,54 +170,54 @@ export default function DemoConsolePage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-2 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <PlayCircle className="w-6 h-6 text-sky-400" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <PlayCircle className="w-6 h-6 text-sky-600 dark:text-sky-400" />
             Deterministic Demo & Presentation Console
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-mono">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
             Sense → Detect → Correlate → Predict → Anticipate → Decide → Safety Check → Act → Verify → Audit
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Link href="/observability">
-            <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 text-xs">
-              <Gauge className="w-3.5 h-3.5 mr-1.5" /> Observability
+            <Button variant="outline" size="sm" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs">
+              <Gauge className="w-3.5 h-3.5 mr-1.5 text-slate-500" /> Observability
             </Button>
           </Link>
           <Link href="/automations">
-            <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 text-xs">
-              <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> Automations
+            <Button variant="outline" size="sm" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-slate-500" /> Automations
             </Button>
           </Link>
           <Link href="/">
-            <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 text-xs">
-              <Activity className="w-3.5 h-3.5 mr-1.5" /> Live Dashboard
+            <Button variant="outline" size="sm" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs">
+              <Activity className="w-3.5 h-3.5 mr-1.5 text-slate-500" /> Live Dashboard
             </Button>
           </Link>
         </div>
       </div>
 
       {/* 2-MINUTE EVALUATOR QUICK GUIDE */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-xs">
-        <div className="flex items-center justify-between font-mono text-sky-400 font-bold mb-2">
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs shadow-xs">
+        <div className="flex items-center justify-between font-mono text-sky-600 dark:text-sky-400 font-bold mb-2">
           <span className="flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-sky-400" />
+            <HelpCircle className="w-4 h-4 text-sky-600 dark:text-sky-400" />
             2-Minute Evaluator Quick Guide
           </span>
-          <Badge className="bg-sky-950/80 text-sky-300 border-sky-800 font-mono text-[10px]">
+          <Badge className="bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800 font-mono text-[10px]">
             100% Real Pipeline Execution · Zero Hallucination
           </Badge>
         </div>
-        <p className="text-slate-400 leading-relaxed">
-          Select any controlled scenario below and click <strong className="text-white">Auto-Play All</strong> or step through sequentially using <strong className="text-white">Next Step</strong>. Each action feeds real telemetry through the authoritative ingestion pipeline, invoking actual statistical baselines, multi-horizon GBDT inference, fail-closed safety interlocks, and post-actuation trajectory verification ($\Delta M$). Every event is correlated and audit-logged in the Observability Timeline in real time.
+        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+          Select any controlled scenario below and click <strong className="text-slate-900 dark:text-white">Auto-Play All</strong> or step through sequentially using <strong className="text-slate-900 dark:text-white">Next Step</strong>. Each action feeds real telemetry through the authoritative ingestion pipeline, invoking actual statistical baselines, multi-horizon GBDT inference, fail-closed safety interlocks, and post-actuation trajectory verification ($\Delta M$). Every event is correlated and audit-logged in the Observability Timeline in real time.
         </p>
       </div>
 
       {/* 8-STAGE INTERACTIVE CONTROL LOOP TRACKER */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-4 space-y-2">
+      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2 shadow-xs">
         <div className="flex items-center justify-between">
           <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
             Real-Time 8-Stage Closed-Loop Control Path:

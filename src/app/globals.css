@@ -13,10 +13,19 @@
   --muted: #64748b;
   --accent: #2563eb;
 
-  --color-success: #059669;
+  /* Strict Semantic Color System */
+  --color-blue: #2563eb;       /* primary interaction / navigation */
+  --color-indigo: #6366f1;     /* intelligence / analytics / ML */
+  --color-teal: #0d9488;       /* live telemetry / connected hardware */
+  --color-green: #16a34a;      /* healthy / verified / successful */
+  --color-amber: #d97706;      /* prediction / warning / degraded */
+  --color-red: #dc2626;        /* incident / critical / failure */
+  --color-sky: #0284c7;        /* informational */
+
+  --color-success: #16a34a;
   --color-warning: #d97706;
   --color-critical: #dc2626;
-  --color-info: #2563eb;
+  --color-info: #0284c7;
 
   --chart-grid: #e2e8f0;
   --chart-axis: #64748b;
@@ -36,9 +45,18 @@
   --muted: #94a3b8;
   --accent: #38bdf8;
 
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-critical: #fb7185;
+  /* Strict Semantic Color System (Dark Mode) */
+  --color-blue: #38bdf8;       /* primary interaction / navigation */
+  --color-indigo: #818cf8;     /* intelligence / analytics / ML */
+  --color-teal: #2dd4bf;       /* live telemetry / connected hardware */
+  --color-green: #22c55e;      /* healthy / verified / successful */
+  --color-amber: #f59e0b;      /* prediction / warning / degraded */
+  --color-red: #ef4444;        /* incident / critical / failure */
+  --color-sky: #38bdf8;        /* informational */
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-critical: #ef4444;
   --color-info: #38bdf8;
 
   --chart-grid: #1e293b;

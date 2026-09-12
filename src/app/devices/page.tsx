@@ -208,15 +208,15 @@ export default function DevicesPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-100">Hardware Fleet Inventory</h1>
-            <Badge variant="outline" className="text-[10px] font-mono border-sky-800 text-sky-400">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Hardware Fleet Inventory</h1>
+            <Badge variant="outline" className="text-[10px] font-mono border-teal-200 dark:border-teal-800 text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/50">
               Phase 6 IoT Ready
             </Badge>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
             Physical ESP32 microcontrollers over MQTT & simulated digital twin telemetry producers
           </p>
         </div>
@@ -229,7 +229,7 @@ export default function DevicesPage() {
               setProvMac('');
               setShowModal(true);
             }}
-            className="flex items-center gap-1.5 text-xs font-mono bg-sky-600 hover:bg-sky-500 text-white"
+            className="flex items-center gap-1.5 text-xs font-mono bg-teal-600 hover:bg-teal-500 text-white"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             Provision ESP32 Node
@@ -239,7 +239,7 @@ export default function DevicesPage() {
             variant="outline"
             size="sm"
             onClick={loadData}
-            className="text-slate-400 hover:text-slate-200"
+            className="border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </Button>
@@ -263,11 +263,11 @@ export default function DevicesPage() {
             onClick={() => setActiveTab('MQTT')}
             className={`px-3 py-1.5 rounded text-xs font-mono transition-colors flex items-center gap-1.5 ${
               activeTab === 'MQTT'
-                ? 'bg-sky-100 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800 text-sky-800 dark:text-sky-300 font-semibold'
+                ? 'bg-teal-50 dark:bg-teal-950/70 border border-teal-300 dark:border-teal-800 text-teal-800 dark:text-teal-300 font-semibold'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
-            <Radio className="w-3 h-3 text-sky-500 dark:text-sky-400" />
+            <Radio className="w-3 h-3 text-teal-600 dark:text-teal-400" />
             Physical Hardware ({physicalCount})
           </button>
           <button

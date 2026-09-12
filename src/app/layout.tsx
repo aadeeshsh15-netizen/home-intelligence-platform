@@ -22,7 +22,13 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  var params = new URLSearchParams(window.location.search);
+                  var queryTheme = params.get('theme');
                   var stored = localStorage.getItem('hip-theme');
+                  if (queryTheme === 'light' || queryTheme === 'dark') {
+                    stored = queryTheme;
+                    try { localStorage.setItem('hip-theme', queryTheme); } catch (e) {}
+                  }
                   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   if (stored === 'dark' || (!stored && prefersDark)) {
                     document.documentElement.classList.add('dark');

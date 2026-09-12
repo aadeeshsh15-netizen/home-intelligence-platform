@@ -19,13 +19,31 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryTheme = urlParams.get('theme') as Theme | null;
+        if (queryTheme === 'light' || queryTheme === 'dark') return queryTheme;
+        const stored = localStorage.getItem('hip-theme') as Theme | null;
+        if (stored === 'light' || stored === 'dark') return stored;
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+      } catch (e) {}
+    }
+    return 'light';
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     try {
-      const stored = localStorage.getItem('hip-theme') as Theme | null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryTheme = urlParams.get('theme') as Theme | null;
+      let stored = localStorage.getItem('hip-theme') as Theme | null;
+      if (queryTheme === 'light' || queryTheme === 'dark') {
+        stored = queryTheme;
+        try { localStorage.setItem('hip-theme', queryTheme); } catch (e) {}
+      }
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       // Default is light for first-time users unless OS explicitly prefers dark
       const initialTheme: Theme =

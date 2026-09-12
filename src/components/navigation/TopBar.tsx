@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRealtimeTelemetry } from '@/lib/useRealtimeTelemetry';
 import { useTheme } from '@/lib/theme';
 import { Button } from '../ui/button';
-import { RefreshCw, Radio, Sun, Moon } from 'lucide-react';
+import { RefreshCw, Radio, Sun, Moon, ChevronDown, Search } from 'lucide-react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 
@@ -13,6 +13,27 @@ export function TopBar() {
   const { theme, setTheme } = useTheme();
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [isTicking, setIsTicking] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const formatted = now.toLocaleDateString('en-US', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }) + ' ' + now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+      setCurrentTime(formatted);
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -40,26 +61,46 @@ export function TopBar() {
   };
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/70 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-20">
-      <div className="flex items-center gap-4">
+    <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-20 transition-colors">
+      {/* Left: Estate Identifier */}
+      <div className="flex items-center gap-6">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Apex Horizon Estate</h2>
-            <span className="text-[10px] text-slate-500 font-mono">EST (UTC-5)</span>
-          </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-            Model: 2 Floors • 7 Rooms • 28 Sensors
+          <button className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group">
+            <span>Apex Horizon Estate</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+          </button>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+            Model 2 • 2 Floors • 7 Rooms • 28 Sensors
           </p>
+        </div>
+
+        {/* Center: Search box */}
+        <div className="hidden md:flex items-center gap-2 bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 w-64 text-slate-400 text-xs">
+          <Search className="w-3.5 h-3.5 text-slate-400" />
+          <span className="flex-1 text-slate-500 dark:text-slate-400 font-sans">Search anything...</span>
+          <kbd className="text-[10px] font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-slate-400 dark:text-slate-400 shadow-xs">
+            Ctrl K
+          </kbd>
         </div>
       </div>
 
-      {/* Realtime Stream Status, Theme Switch & Controls */}
-      <div className="flex items-center gap-3">
-        {/* Compact Theme Switch */}
+      {/* Right: Date, Theme Switch & Controls */}
+      <div className="flex items-center gap-3.5">
+        {/* Live Date / Time Display */}
+        <div className="hidden lg:flex flex-col text-right font-mono">
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+            {currentTime.split(' ')[0]} {currentTime.split(' ')[1]} {currentTime.split(' ')[2]} {currentTime.split(' ')[3]}
+          </span>
+          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 font-mono-numeric">
+            {currentTime.split(' ').slice(4).join(' ')}
+          </span>
+        </div>
+
+        {/* Compact Theme Switch (Segmented pill) */}
         <div
           role="radiogroup"
           aria-label="Theme selector"
-          className="flex items-center p-0.5 rounded border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-xs font-mono"
+          className="flex items-center p-0.5 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-xs font-mono"
         >
           <button
             type="button"
@@ -68,13 +109,13 @@ export function TopBar() {
             onClick={() => setTheme('light')}
             aria-label="Light theme"
             className={clsx(
-              'flex items-center gap-1.5 px-2 py-1 rounded transition-colors text-[11px] cursor-pointer',
+              'flex items-center gap-1 px-2.5 py-1 rounded-full transition-all text-[11px] cursor-pointer',
               theme === 'light'
                 ? 'bg-white text-slate-900 shadow-xs font-medium'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
             )}
           >
-            <Sun className="w-3 h-3 text-amber-500" />
+            <Sun className="w-3.5 h-3.5 text-amber-500" />
             <span>Light</span>
           </button>
           <button
@@ -84,21 +125,21 @@ export function TopBar() {
             onClick={() => setTheme('dark')}
             aria-label="Dark theme"
             className={clsx(
-              'flex items-center gap-1.5 px-2 py-1 rounded transition-colors text-[11px] cursor-pointer',
+              'flex items-center gap-1 px-2.5 py-1 rounded-full transition-all text-[11px] cursor-pointer',
               theme === 'dark'
                 ? 'bg-slate-800 text-slate-100 shadow-xs font-medium'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
             )}
           >
-            <Moon className="w-3 h-3 text-sky-400" />
+            <Moon className="w-3.5 h-3.5 text-sky-400" />
             <span>Dark</span>
           </button>
         </div>
 
         {/* Stream Status Pill */}
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded px-3 py-1.5 text-xs font-mono">
+        <div className="hidden sm:flex items-center gap-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-[11px] font-mono">
           <span
-            className={`w-2 h-2 rounded-full ${
+            className={`w-1.5 h-1.5 rounded-full ${
               connectionState === 'LIVE'
                 ? 'bg-emerald-500 animate-pulse'
                 : connectionState === 'CONNECTING'
@@ -106,38 +147,34 @@ export function TopBar() {
                 : 'bg-rose-500'
             }`}
           />
-          <span className="text-slate-700 dark:text-slate-300 uppercase tracking-wider">{connectionState}</span>
-          <span className="text-slate-400 dark:text-slate-600">|</span>
-          <span className="text-slate-500 dark:text-slate-400">
-            {lastHeartbeat ? `${secondsAgo}s ago` : 'Syncing...'}
-          </span>
-          {lastTick && (
-            <>
-              <span className="text-slate-400 dark:text-slate-600">|</span>
-              <span className="text-sky-600 dark:text-sky-400 truncate max-w-[140px]">
-                {lastTick.roomName}: {lastTick.value} {lastTick.unit}
-              </span>
-            </>
+          <span className="text-slate-700 dark:text-slate-300 font-medium">{connectionState}</span>
+          {lastHeartbeat && (
+            <span className="text-slate-400 dark:text-slate-500 hidden xl:inline">
+              · {secondsAgo}s ago
+            </span>
           )}
         </div>
 
+        {/* Sim Controls */}
         <Button
           size="sm"
           variant="secondary"
           onClick={handleManualTick}
           disabled={isTicking}
-          className="text-xs font-mono"
+          className="text-xs font-mono h-8 px-2.5"
+          title="Trigger simulation tick"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isTicking ? 'animate-spin' : ''}`} />
-          <span>Sim Tick</span>
+          <RefreshCw className={`w-3 h-3 ${isTicking ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Sim Tick</span>
         </Button>
 
-        <Link href="/simulator">
-          <Button size="sm" variant="outline" className="text-xs font-mono text-sky-600 dark:text-sky-400 border-slate-300 dark:border-sky-900/60 hover:bg-sky-50 dark:hover:bg-sky-950/30">
-            <Radio className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-            <span>Simulator</span>
-          </Button>
-        </Link>
+        {/* User Avatar */}
+        <div
+          className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-default"
+          title="Apex Administrator"
+        >
+          A
+        </div>
       </div>
     </header>
   );
