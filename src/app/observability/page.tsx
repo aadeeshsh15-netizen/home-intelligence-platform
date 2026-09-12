@@ -340,7 +340,7 @@ export default function ObservabilityDashboard() {
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-[10px] font-mono text-slate-500">
+                        <span suppressHydrationWarning className="text-[10px] font-mono text-slate-500">
                           {new Date(evt.timestamp).toLocaleTimeString()}
                         </span>
                         {evt.metadata && (

@@ -87,11 +87,11 @@ export function TopBar() {
       {/* Right: Date, Theme Switch & Controls */}
       <div className="flex items-center gap-3.5">
         {/* Live Date / Time Display */}
-        <div className="hidden lg:flex flex-col text-right font-mono">
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+        <div suppressHydrationWarning className="hidden lg:flex flex-col text-right font-mono">
+          <span suppressHydrationWarning className="text-[10px] text-slate-400 dark:text-slate-500">
             {currentTime.split(' ')[0]} {currentTime.split(' ')[1]} {currentTime.split(' ')[2]} {currentTime.split(' ')[3]}
           </span>
-          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 font-mono-numeric">
+          <span suppressHydrationWarning className="text-xs font-semibold text-slate-800 dark:text-slate-200 font-mono-numeric">
             {currentTime.split(' ').slice(4).join(' ')}
           </span>
         </div>

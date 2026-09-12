@@ -37,7 +37,7 @@ const DEFAULT_OBSERVABILITY = {
   recentEvents: [
     {
       id: 'evt-1',
-      timestamp: new Date(Date.now() - 1000 * 60 * 4).toISOString(),
+      timestamp: '2026-09-12T10:15:00.000Z',
       category: 'PREDICTION',
       eventType: 'PREDICTION_EXPIRED',
       severity: 'WARNING',
@@ -47,7 +47,7 @@ const DEFAULT_OBSERVABILITY = {
     },
     {
       id: 'evt-2',
-      timestamp: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
+      timestamp: '2026-09-12T10:13:00.000Z',
       category: 'INCIDENT',
       eventType: 'EVENT_RESOLVED',
       severity: 'INFO',
@@ -57,7 +57,7 @@ const DEFAULT_OBSERVABILITY = {
     },
     {
       id: 'evt-3',
-      timestamp: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+      timestamp: '2026-09-12T10:01:00.000Z',
       category: 'INCIDENT',
       eventType: 'EVENT_DETECTED',
       severity: 'CRITICAL',
@@ -67,7 +67,7 @@ const DEFAULT_OBSERVABILITY = {
     },
     {
       id: 'evt-4',
-      timestamp: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
+      timestamp: '2026-09-12T09:47:00.000Z',
       category: 'AUTOMATION',
       eventType: 'POLICY_EVALUATED',
       severity: 'INFO',
@@ -77,7 +77,7 @@ const DEFAULT_OBSERVABILITY = {
     },
     {
       id: 'evt-5',
-      timestamp: new Date(Date.now() - 1000 * 60 * 46).toISOString(),
+      timestamp: '2026-09-12T09:33:00.000Z',
       category: 'DEVICE',
       eventType: 'DEVICE_RECONNECTED',
       severity: 'INFO',
@@ -105,6 +105,11 @@ export default function OperationalInstrumentPage() {
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const [activeFloor, setActiveFloor] = useState<'Floor 1' | 'Floor 2'>('Floor 1');
   const [secondsAgo, setSecondsAgo] = useState(12);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleTick = useCallback((tick: TelemetryTick) => {
     setSecondsAgo(1);
@@ -635,12 +640,17 @@ export default function OperationalInstrumentPage() {
                     </div>
 
                     {/* Event Timestamp */}
-                    <span className="font-mono text-slate-400 dark:text-slate-500 text-[11px] shrink-0 w-10">
-                      {new Date(evt.timestamp).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                      })}
+                    <span
+                      suppressHydrationWarning
+                      className="font-mono text-slate-400 dark:text-slate-500 text-[11px] shrink-0 w-10"
+                    >
+                      {mounted
+                        ? new Date(evt.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                          })
+                        : '--:--'}
                     </span>
 
                     {/* Event Content */}
@@ -758,7 +768,10 @@ export default function OperationalInstrumentPage() {
             </div>
             <div>
               <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Telemetry Freshness</div>
-              <div className="text-[11px] text-slate-600 dark:text-slate-400 font-mono font-medium">
+              <div
+                suppressHydrationWarning
+                className="text-[11px] text-slate-600 dark:text-slate-400 font-mono font-medium"
+              >
                 {secondsAgo} seconds ago
               </div>
             </div>
