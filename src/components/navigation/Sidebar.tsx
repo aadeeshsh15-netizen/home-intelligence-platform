@@ -19,6 +19,7 @@ import {
   PlayCircle,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { BRAND } from '@/lib/brand';
 
 const navSections = [
   {
@@ -70,16 +71,16 @@ export function Sidebar() {
     <aside className="w-60 border-r border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-950 flex flex-col justify-between shrink-0 h-screen sticky top-0 select-none transition-colors duration-150">
       <div className="overflow-y-auto">
         {/* Brand Header */}
-        <div className="h-16 flex items-center px-5 border-b border-slate-200 dark:border-slate-800/60 gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white shadow-xs font-bold text-sm tracking-tighter">
-            H
+        <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800/60 gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white shadow-xs font-bold text-xs tracking-tighter shrink-0">
+            IoT
           </div>
-          <div>
-            <div className="text-xs font-bold tracking-tight text-slate-900 dark:text-slate-100 uppercase font-sans">
-              Home Intelligence
+          <div className="min-w-0">
+            <div className="text-[11px] font-bold tracking-tight text-slate-900 dark:text-slate-100 uppercase font-sans leading-tight" title={BRAND.name}>
+              {BRAND.name}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-sans">
-              A Smarter, Safer Home
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-sans truncate">
+              {BRAND.tagline}
             </div>
           </div>
         </div>

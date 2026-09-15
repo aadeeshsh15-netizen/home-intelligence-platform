@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRealtimeTelemetry, TelemetryTick } from '@/lib/useRealtimeTelemetry';
 import { useHome } from '@/lib/home-context';
 import { useTheme } from '@/lib/theme';
+import { BRAND } from '@/lib/brand';
 import {
   RefreshCw,
   Eye,
@@ -1035,7 +1036,7 @@ export default function OperationalInstrumentPage() {
         </div>
 
         <div className="relative z-10 text-[11px] text-slate-400 font-mono">
-          Home Intelligence v1.0.0
+          {BRAND.name} {BRAND.version}
         </div>
       </footer>
     </div>

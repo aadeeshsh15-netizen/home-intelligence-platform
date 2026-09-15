@@ -4,10 +4,11 @@ import { Sidebar } from '@/components/navigation/Sidebar';
 import { TopBar } from '@/components/navigation/TopBar';
 import { ThemeProvider } from '@/lib/theme';
 import { HomeProvider } from '@/lib/home-context';
+import { BRAND } from '@/lib/brand';
 
 export const metadata: Metadata = {
-  title: 'Home Intelligence Platform | Telemetry & Anomaly Analysis',
-  description: 'Production-quality engineering platform for household environmental telemetry, device health, and statistical anomaly detection.',
+  title: BRAND.browserTitle,
+  description: BRAND.metaDescription,
 };
 
 export default function RootLayout({
