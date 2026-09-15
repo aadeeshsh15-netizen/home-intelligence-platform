@@ -1,0 +1,14 @@
+﻿node_modules
+.next
+.git
+.env
+.env*.local
+*.log
+scratch/
+.gemini/
+postgres_data/
+mosquitto_data/
+coverage/
+*.db
+*.sqlite
+*.tsbuildinfo

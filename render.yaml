@@ -1,0 +1,38 @@
+﻿databases:
+  - name: home-intelligence-db
+    databaseName: home_intelligence
+    user: home_intelligence_user
+    plan: free
+    region: oregon
+    ipAllowList: []
+
+services:
+  - type: web
+    name: home-intelligence-platform
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: free
+    healthCheckPath: /api/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: home-intelligence-db
+          property: connectionString
+      - key: APP_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MQTT_BROKER_URL
+        value: mqtt://localhost:1883
+      - key: SIMULATOR_ENABLED
+        value: "true"
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
